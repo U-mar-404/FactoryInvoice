@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import { generateToken, AuthenticatedRequest, authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
@@ -11,8 +12,9 @@ router.post('/login', async (req: AuthenticatedRequest, res: Response) => {
     const { username, password } = req.body;
 
     const uname = (username || '').trim().toLowerCase();
-    if (!uname) {
-      return res.status(400).json({ message: 'Username is required' });
+    const passStr = (password || '').trim();
+    if (!uname || !passStr) {
+      return res.status(400).json({ message: 'Username and password are required' });
     }
 
     // 1. Look up user account in database
@@ -25,8 +27,16 @@ router.post('/login', async (req: AuthenticatedRequest, res: Response) => {
       return res.status(401).json({ message: 'Invalid username or password' });
     }
 
-    // 2. Validate password (demo check allows demo123 or matching hash)
-    if (password && password !== 'demo123' && user.passwordHash !== password) {
+    // 2. Validate password against bcrypt hash
+    let isMatch = false;
+    if (user.passwordHash.startsWith('$2a$') || user.passwordHash.startsWith('$2b$')) {
+      isMatch = await bcrypt.compare(passStr, user.passwordHash);
+    } else {
+      // Legacy fallback check if password was unhashed in dev
+      isMatch = user.passwordHash === passStr;
+    }
+
+    if (!isMatch) {
       return res.status(401).json({ message: 'Invalid username or password' });
     }
 

@@ -1,4 +1,5 @@
 import { PrismaClient, Role } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -76,23 +77,28 @@ async function main() {
   await prisma.series.deleteMany({});
   await prisma.itemType.deleteMany({});
 
-  // Ensure default system accounts exist
+  // Ensure default system accounts exist with bcrypt hashed passwords
+  const adminHash = await bcrypt.hash('admin123', 10);
+  const managerHash = await bcrypt.hash('manager123', 10);
+  const storeHash = await bcrypt.hash('store123', 10);
+  const customerDefaultHash = await bcrypt.hash('customer123', 10);
+
   await prisma.user.upsert({
     where: { username: 'admin' },
-    update: {},
-    create: { username: 'admin', name: 'System Admin', passwordHash: 'demo123', role: Role.ADMIN },
+    update: { passwordHash: adminHash },
+    create: { username: 'admin', name: 'System Admin', passwordHash: adminHash, role: Role.ADMIN },
   });
 
   await prisma.user.upsert({
     where: { username: 'manager' },
-    update: {},
-    create: { username: 'manager', name: 'Manager', passwordHash: 'demo123', role: Role.MANAGER },
+    update: { passwordHash: managerHash },
+    create: { username: 'manager', name: 'Manager', passwordHash: managerHash, role: Role.MANAGER },
   });
 
   await prisma.user.upsert({
     where: { username: 'store' },
-    update: {},
-    create: { username: 'store', name: 'Store Desk', passwordHash: 'demo123', role: Role.STORE },
+    update: { passwordHash: storeHash },
+    create: { username: 'store', name: 'Store Desk', passwordHash: storeHash, role: Role.STORE },
   });
 
   // STEP 2: Create 7 Series & Colors (White & Black for every series)
@@ -193,11 +199,11 @@ async function main() {
 
     await prisma.user.upsert({
       where: { username: c.username },
-      update: { customerId: customer.id },
+      update: { customerId: customer.id, passwordHash: customerDefaultHash },
       create: {
         username: c.username,
         name: c.name,
-        passwordHash: 'demo123',
+        passwordHash: customerDefaultHash,
         role: Role.CUSTOMER,
         customerId: customer.id,
       },

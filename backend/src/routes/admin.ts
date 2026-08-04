@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { PrismaClient, Role } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import { authenticateToken, requireRole, AuthenticatedRequest } from '../middleware/auth.js';
 
 const router = Router();
@@ -50,11 +51,17 @@ router.post('/users', authenticateToken, requireRole([Role.ADMIN]), async (req: 
       return res.status(400).json({ message: 'Username and Name are required' });
     }
 
+    const passStr = (password || '').trim();
+    if (!passStr || passStr.length < 6) {
+      return res.status(400).json({ message: 'Password is required and must be at least 6 characters long' });
+    }
+
     const existing = await prisma.user.findUnique({ where: { username: uname } });
     if (existing) {
       return res.status(400).json({ message: 'Username already exists' });
     }
 
+    const passwordHash = await bcrypt.hash(passStr, 10);
     const targetRole = (role || 'customer').toUpperCase() as Role;
     let customerId: string | undefined = undefined;
 
@@ -84,7 +91,7 @@ router.post('/users', authenticateToken, requireRole([Role.ADMIN]), async (req: 
       data: {
         username: uname,
         name,
-        passwordHash: password || 'demo123',
+        passwordHash,
         role: targetRole,
         customerId,
       },
@@ -132,7 +139,11 @@ router.put('/users/:id', authenticateToken, requireRole([Role.ADMIN]), async (re
     };
 
     if (password) {
-      updateData.passwordHash = password;
+      const passStr = String(password).trim();
+      if (passStr.length < 6) {
+        return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+      }
+      updateData.passwordHash = await bcrypt.hash(passStr, 10);
     }
 
     // Handle Customer record linking/updating if role is CUSTOMER

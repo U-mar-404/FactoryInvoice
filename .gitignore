@@ -7,6 +7,8 @@ backend/node_modules/
 .env.local
 .env.production
 backend/.env
+CREDENTIALS.md
+credentials.md
 
 # WhatsApp Baileys Auth Session data (DO NOT COMMIT)
 baileys_auth_info/

@@ -293,7 +293,14 @@ Next: Final system verification and deployment readiness.
 - Doubled logo height to 104px in [printInvoice.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/utils/printInvoice.ts) for both printable invoices and Store packing slips, maintaining clean transparent background.
 - Doubled logo height to 72px in [pdfInvoiceService.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/src/services/pdfInvoiceService.ts), expanding top navy banner to 122px with proportional y-offsets.
 
+
+## 2026-08-04 (Authentication System End-to-End Audit & Bcrypt Security Hardening)
+- Replaced demo password logic in [auth.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/src/routes/auth.ts) with `bcrypt.compare(password, user.passwordHash)` password verification.
+- Enforced minimum 6-character length requirement and `bcrypt.hash(password, 10)` in [admin.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/src/routes/admin.ts) user endpoints and [seed.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/prisma/seed.ts).
+- Created ignored `CREDENTIALS.md` for local reference and updated [GEMINI.md](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/GEMINI.md) with bootstrapped admin account documentation.
+
 Next: Await further feature directives or user feedback.
+
 
 
 
