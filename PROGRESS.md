@@ -311,7 +311,14 @@ Next: Final system verification and deployment readiness.
 - Updated [ErrorBoundary.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/common/ErrorBoundary.tsx) to log rendering errors silently to browser console, clear invalid local storage sessions, and automatically redirect to sign in without showing technical error screens.
 - Confirmed zero build errors and clean page refreshes across all four roles (Admin, Manager, Store, Customer).
 
+
+## 2026-08-04 (Brute-Force Rate Limiting & Lockout Protection)
+- Added dedicated brute-force protection middleware in [bruteForce.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/src/middleware/bruteForce.ts) tracking failed attempts per IP + username within a 15-minute sliding window.
+- Configured 8 maximum failed attempts threshold, triggering a 15-minute lockout (HTTP 429 Too Many Requests with exact remaining time) and logging security audit warnings.
+- Enforced generic `"Invalid username or password"` error messages in [auth.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/src/routes/auth.ts) to prevent username enumeration attacks.
+
 Next: Await further feature directives or user feedback.
+
 
 
 

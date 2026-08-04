@@ -2,18 +2,20 @@ import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { generateToken, AuthenticatedRequest, authenticateToken } from '../middleware/auth.js';
+import { checkBruteForceLockout, recordFailedLogin, resetFailedLogin } from '../middleware/bruteForce.js';
 
 const router = Router();
 const prisma = new PrismaClient();
 
-// POST /api/auth/login - Role-autodetect authentication
-router.post('/login', async (req: AuthenticatedRequest, res: Response) => {
+// POST /api/auth/login - Role-autodetect authentication with brute-force rate limiting
+router.post('/login', checkBruteForceLockout, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { username, password } = req.body;
 
     const uname = (username || '').trim().toLowerCase();
     const passStr = (password || '').trim();
     if (!uname || !passStr) {
+      recordFailedLogin(req);
       return res.status(400).json({ message: 'Username and password are required' });
     }
 
@@ -24,6 +26,7 @@ router.post('/login', async (req: AuthenticatedRequest, res: Response) => {
     });
 
     if (!user) {
+      recordFailedLogin(req);
       return res.status(401).json({ message: 'Invalid username or password' });
     }
 
@@ -37,8 +40,12 @@ router.post('/login', async (req: AuthenticatedRequest, res: Response) => {
     }
 
     if (!isMatch) {
+      recordFailedLogin(req);
       return res.status(401).json({ message: 'Invalid username or password' });
     }
+
+    // Reset failed attempt counter on successful login
+    resetFailedLogin(req);
 
     // 3. Construct JWT payload with auto-detected role
     const roleString = user.role.toLowerCase() as 'admin' | 'customer' | 'manager' | 'store';
