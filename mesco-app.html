@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesco — Orders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1B42;
+    --navy-2:#122a63;
+    --blue:#2F6FED;
+    --blue-dim:#e8f0ff;
+    --bg:#FFFFFF;
+    --bg-subtle:#F5F8FD;
+    --line:#E4E9F2;
+    --ink:#0F1B33;
+    --ink-dim:#5A6786;
+    --good:#1E9E5A;
+    --bad:#D9432E;
+    --warn:#C98A17;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.disp{font-family:'Space Grotesk',sans-serif;}
+  .hidden{display:none !important;}
+  button{font-family:inherit;cursor:pointer;}
+  ::selection{background:var(--blue-dim);}
+
+  /* ---------- LOGIN ---------- */
+  #loginScreen{min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr;}
+  @media (max-width:820px){ #loginScreen{grid-template-columns:1fr;} .loginHero{display:none !important;} }
+  .loginHero{background:var(--navy);color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;}
+  .loginHero::before{content:"";position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle at 30% 30%, rgba(47,111,237,.55), transparent 70%);top:-180px;right:-160px;animation:float 9s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(24px)}}
+  .brandmark{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;letter-spacing:.02em;z-index:1;}
+  .brandmark .dot{width:10px;height:10px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 6px rgba(47,111,237,.25);}
+  .heroCopy{z-index:1;}
+  .heroCopy h1{font-size:40px;line-height:1.15;margin:0 0 14px;font-weight:600;}
+  .heroCopy p{color:#B9C4E4;font-size:15px;line-height:1.6;max-width:380px;margin:0;}
+  .heroFoot{z-index:1;display:flex;gap:28px;color:#8B98C0;font-size:13px;}
+  .heroFoot b{color:#fff;display:block;font-family:'Space Grotesk';font-size:20px;font-weight:600;}
+
+  .loginPane{display:flex;align-items:center;justify-content:center;padding:32px;}
+  .loginCard{width:100%;max-width:360px;}
+  .loginCard h2{font-size:22px;margin:0 0 6px;font-weight:600;}
+  .loginCard .sub{color:var(--ink-dim);font-size:14px;margin:0 0 24px;}
+  .roleTabs{display:flex;background:var(--bg-subtle);border-radius:10px;padding:4px;margin-bottom:22px;position:relative;}
+  .roleTab{flex:1;text-align:center;padding:9px 0;font-size:13px;font-weight:600;border:none;background:transparent;border-radius:8px;color:var(--ink-dim);position:relative;z-index:1;transition:color .25s;}
+  .roleTab.active{color:#fff;}
+  .roleIndicator{position:absolute;top:4px;bottom:4px;width:calc(33.333% - 2.66px);background:var(--navy);border-radius:8px;transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:0;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-dim);margin-bottom:6px;}
+  .field input,.field select{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit;background:#fff;transition:border-color .15s;}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--blue);}
+  .btnPrimary{width:100%;padding:12px;background:var(--navy);color:#fff;border:none;border-radius:9px;font-weight:600;font-size:14.5px;transition:transform .12s, background .2s;margin-top:6px;}
+  .btnPrimary:hover{background:var(--navy-2);}
+  .btnPrimary:active{transform:scale(.98);}
+  .loginErr{color:var(--bad);font-size:13px;margin-top:10px;min-height:16px;}
+  .demoNote{margin-top:22px;font-size:12px;color:var(--ink-dim);background:var(--bg-subtle);padding:10px 12px;border-radius:8px;line-height:1.6;}
+  .demoNote b{color:var(--ink);}
+
+  /* ---------- APP SHELL ---------- */
+  #mainScreen{display:flex;min-height:100vh;}
+  .sidebar{width:236px;flex-shrink:0;background:var(--navy);color:#fff;display:flex;flex-direction:column;padding:22px 14px;}
+  .sidebar .brandmark{padding:0 8px 26px;font-size:17px;}
+  .navGroup{position:relative;display:flex;flex-direction:column;gap:2px;}
+  .navPill{position:absolute;left:0;right:0;height:38px;background:var(--blue);border-radius:9px;transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:0;}
+  .navItem{position:relative;z-index:1;display:flex;align-items:center;gap:10px;padding:0 12px;height:38px;border:none;background:transparent;color:#B9C4E4;font-size:13.5px;font-weight:600;border-radius:9px;text-align:left;width:100%;transition:color .2s;}
+  .navItem.active{color:#fff;}
+  .navItem:hover:not(.active){color:#fff;}
+  .navItem svg{width:16px;height:16px;flex-shrink:0;}
+  .sidebarFoot{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);}
+  .userChip{display:flex;align-items:center;gap:10px;padding:8px;border-radius:9px;}
+  .userChip .av{width:32px;height:32px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+  .userChip .who{overflow:hidden;}
+  .userChip .who .n{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .userChip .who .r{font-size:11px;color:#8B98C0;}
+  .logoutBtn{margin-top:10px;width:100%;padding:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#B9C4E4;border-radius:9px;font-size:12.5px;font-weight:600;}
+  .logoutBtn:hover{background:rgba(255,255,255,.12);color:#fff;}
+
+  .content{flex:1;padding:32px 40px;overflow-y:auto;height:100vh;}
+  .pageHead{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:26px;flex-wrap:wrap;gap:14px;}
+  .pageHead h1{font-size:24px;margin:0 0 4px;font-weight:600;}
+  .pageHead .sub{color:var(--ink-dim);font-size:14px;margin:0;}
+  .page{animation:pageIn .32s cubic-bezier(.2,.7,.3,1);}
+  @keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  .statRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:26px;}
+  .statCard{background:var(--bg-subtle);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;}
+  .statCard .lbl{font-size:12px;color:var(--ink-dim);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  .statCard .val{font-size:24px;font-weight:700;margin-top:6px;font-family:'Space Grotesk';}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);}
+  .cardHead{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .cardHead h3{margin:0;font-size:15px;font-weight:600;}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;padding:11px 20px;color:var(--ink-dim);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line);}
+  td{padding:13px 20px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr.rowIn{animation:pageIn .3s ease both;}
+
+  .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;letter-spacing:.02em;}
+  .badge.pending{background:#FFF3DC;color:var(--warn);}
+  .badge.approved{background:#DDEBFF;color:var(--blue);}
+  .badge.dispatched{background:#DFF5E6;color:var(--good);}
+  .badge.denied{background:#FCE2DE;color:var(--bad);}
+
+  .btn{padding:8px 14px;border-radius:8px;font-size:12.5px;font-weight:700;border:1.5px solid transparent;transition:transform .12s, opacity .2s;}
+  .btn:active{transform:scale(.96);}
+  .btn.b-primary{background:var(--navy);color:#fff;}
+  .btn.b-primary:hover{background:var(--navy-2);}
+  .btn.b-good{background:var(--good);color:#fff;}
+  .btn.b-bad{background:#fff;color:var(--bad);border-color:#F3C9C1;}
+  .btn.b-bad:hover{background:#FCE2DE;}
+  .btn.b-ghost{background:var(--bg-subtle);color:var(--ink);border-color:var(--line);}
+  .btn.b-ghost:hover{background:var(--blue-dim);}
+  .btn.small{padding:6px 10px;font-size:11.5px;}
+  .btnRow{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .empty{padding:60px 20px;text-align:center;color:var(--ink-dim);}
+  .empty .ic{font-size:30px;margin-bottom:10px;}
+  .empty b{color:var(--ink);display:block;margin-bottom:4px;font-size:14.5px;}
+
+  /* Catalog / ordering */
+  .seriesTabs{display:flex;gap:6px;margin-bottom:18px;background:var(--bg-subtle);padding:4px;border-radius:10px;width:fit-content;}
+  .seriesTab{padding:8px 16px;border:none;background:transparent;border-radius:8px;font-size:12.5px;font-weight:700;color:var(--ink-dim);}
+  .seriesTab.active{background:var(--navy);color:#fff;}
+  .catGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+  .catCard{border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;transition:border-color .15s, box-shadow .15s;}
+  .catCard:hover{border-color:var(--blue);box-shadow:0 4px 16px rgba(47,111,237,.08);}
+  .catCard .code{font-size:11px;color:var(--ink-dim);font-weight:700;letter-spacing:.03em;}
+  .catCard .nm{font-size:14px;font-weight:600;margin:4px 0 10px;line-height:1.3;min-height:36px;}
+  .catCard .price{font-family:'Space Grotesk';font-size:19px;font-weight:700;color:var(--navy);}
+  .catCard .price small{font-size:11px;color:var(--ink-dim);font-weight:500;}
+  .qtyRow{display:flex;align-items:center;gap:8px;margin-top:12px;}
+  .qtyBtn{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--line);background:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  .qtyBtn:hover{background:var(--bg-subtle);}
+  .qtyRow input{width:44px;text-align:center;border:1.5px solid var(--line);border-radius:7px;padding:5px 2px;font-size:13px;font-weight:600;}
+  .addBtn{margin-left:auto;padding:7px 12px;border-radius:7px;border:none;background:var(--blue-dim);color:var(--blue);font-weight:700;font-size:12px;}
+  .addBtn:hover{background:var(--blue);color:#fff;}
+
+  .cartFab{position:fixed;bottom:26px;right:40px;background:var(--navy);color:#fff;padding:14px 22px;border-radius:40px;border:none;font-weight:700;font-size:14px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(11,27,66,.35);transition:transform .2s;z-index:20;}
+  .cartFab:hover{transform:translateY(-2px);}
+  .cartFab .n{background:var(--blue);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11.5px;}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:380px;max-width:92vw;background:#fff;box-shadow:-16px 0 40px rgba(11,27,66,.14);z-index:40;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .32s cubic-bezier(.3,.8,.3,1);}
+  .drawer.open{transform:translateX(0);}
+  .drawerOverlay{position:fixed;inset:0;background:rgba(11,27,66,.28);z-index:39;opacity:0;pointer-events:none;transition:opacity .25s;}
+  .drawerOverlay.open{opacity:1;pointer-events:all;}
+  .drawerHead{padding:20px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .drawerHead h3{margin:0;font-size:16px;}
+  .drawerClose{background:none;border:none;font-size:20px;color:var(--ink-dim);}
+  .drawerBody{flex:1;overflow-y:auto;padding:14px 22px;}
+  .cartLine{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);gap:8px;}
+  .cartLine .nm{font-size:13.5px;font-weight:600;}
+  .cartLine .meta{font-size:11.5px;color:var(--ink-dim);}
+  .cartLine .rm{background:none;border:none;color:var(--bad);font-size:12px;font-weight:700;}
+  .drawerFoot{padding:18px 22px;border-top:1px solid var(--line);}
+  .sumRow{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:6px;color:var(--ink-dim);}
+  .sumRow.tot{color:var(--ink);font-weight:700;font-size:16px;font-family:'Space Grotesk';margin-top:8px;}
+
+  .modalOverlay{position:fixed;inset:0;background:rgba(11,27,66,.36);z-index:50;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+  .modalOverlay.open{opacity:1;pointer-events:all;}
+  .modal{background:#fff;border-radius:14px;width:460px;max-width:92vw;max-height:86vh;overflow-y:auto;transform:scale(.94);transition:transform .22s;}
+  .modalOverlay.open .modal{transform:scale(1);}
+  .modalHead{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .modalHead h3{margin:0;font-size:15.5px;}
+  .modalBody{padding:18px 22px;}
+  .modalFoot{padding:16px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;}
+  .modLine{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .modLine .nm{flex:1;}
+  .modLine input{width:60px;padding:5px;border:1.5px solid var(--line);border-radius:6px;text-align:center;}
+
+  .toastWrap{position:fixed;bottom:24px;left:24px;z-index:99;display:flex;flex-direction:column;gap:8px;}
+  .toast{background:var(--navy);color:#fff;padding:12px 18px;border-radius:9px;font-size:13.5px;font-weight:600;box-shadow:0 8px 22px rgba(11,27,66,.3);display:flex;align-items:center;gap:8px;animation:toastIn .3s cubic-bezier(.3,.8,.3,1);}
+  .toast.good{background:var(--good);}
+  .toast.bad{background:var(--bad);}
+  @keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+  input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+
+  @media print{
+    .sidebar,.pageHead .btnRow,.cartFab,.no-print{display:none !important;}
+    .content{padding:0;}
+    body{background:#fff;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="loginHero">
+    <div class="brandmark"><span class="dot"></span> MESCO</div>
+    <div class="heroCopy">
+      <h1>Switches &amp; sockets,<br>ordered properly.</h1>
+      <p>One place to order, approve, dispatch, and bill — for customers, the office, and the store floor.</p>
+    </div>
+    <div class="heroFoot">
+      <div><b>3</b>series</div>
+      <div><b>36</b>item types</div>
+      <div><b>live</b>stock &amp; rates</div>
+    </div>
+  </div>
+  <div class="loginPane">
+    <div class="loginCard">
+      <h2>Sign in</h2>
+      <p class="sub">Choose your role to continue.</p>
+      <div class="roleTabs">
+        <div class="roleIndicator" id="roleIndicator"></div>
+        <button class="roleTab active" data-role="customer">Customer</button>
+        <button class="roleTab" data-role="manager">Manager</button>
+        <button class="roleTab" data-role="store">Store</button>
+      </div>
+      <form id="loginForm">
+        <div class="field" id="custSelectWrap">
+          <label>Customer account</label>
+          <select id="custSelect"></select>
+        </div>
+        <div class="field hidden" id="userField">
+          <label>Username</label>
+          <input type="text" id="userInput" placeholder="e.g. manager">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="passInput" placeholder="••••••••" value="demo123">
+        </div>
+        <button type="submit" class="btnPrimary">Sign in</button>
+        <div class="loginErr" id="loginErr"></div>
+      </form>
+      <div class="demoNote"><b>Demo access</b> — any password works. Pick a customer account, or use <b>manager</b> / <b>store</b> as the username for those roles.</div>
+    </div>
+  </div>
+</div>
+
+<div id="mainScreen" class="hidden">
+  <aside class="sidebar">
+    <div class="brandmark"><span class="dot"></span> MESCO</div>
+    <div class="navGroup" id="navGroup"></div>
+    <div class="sidebarFoot">
+      <div class="userChip">
+        <div class="av" id="avInit"></div>
+        <div class="who"><div class="n" id="whoName"></div><div class="r" id="whoRole"></div></div>
+      </div>
+      <button class="logoutBtn" id="logoutBtn">Sign out</button>
+    </div>
+  </aside>
+  <main class="content"><div id="pageContent" class="page"></div></main>
+</div>
+
+<button class="cartFab hidden no-print" id="cartFab">🛒 Cart <span class="n" id="cartCount">0</span></button>
+<div class="drawerOverlay" id="drawerOverlay"></div>
+<div class="drawer" id="cartDrawer">
+  <div class="drawerHead"><h3>Your order</h3><button class="drawerClose" id="drawerClose">✕</button></div>
+  <div class="drawerBody" id="drawerBody"></div>
+  <div class="drawerFoot" id="drawerFoot"></div>
+</div>
+
+<div class="modalOverlay" id="modalOverlay"><div class="modal" id="modalBox"></div></div>
+<div class="toastWrap" id="toastWrap"></div>
+
+<script>
+/* ============ DATA ============ */
+const SERIES = ['Vector','Ambit','WavesCubic'];
+const SERIES_LABEL = {Vector:'Vector', Ambit:'Ambit', WavesCubic:'Waves/Cubic'};
+
+const DEFAULT_CATALOG = [
+ ['01','1 Gang 1 Way Switch',10,[590,550,570]],
+ ['02','2 Gang 1 Way Switch',10,[790,750,770]],
+ ['03','3 Gang 1 Way Switch',10,[920,870,900]],
+ ['04','4 Gang 1 Way Switch',10,[1030,980,1010]],
+ ['06','6 Gang 1 Way Switch',6,[1610,1550,1590]],
+ ['08','8 Gang 1 Way Switch',6,[1700,1640,1680]],
+ ['11','10 Gang 1 Way Switch',6,[1770,1730,1750]],
+ ['33','1 Gang 2 Way Switch',10,[790,750,770]],
+ ['05','1 Switch + 1 Socket',10,[790,750,770]],
+ ['07','2 Switch + 1 Socket',10,[920,880,900]],
+ ['10','3 Switch + 1 Socket',10,[1030,990,1010]],
+ ['09','2 Switch + 2 Socket',10,[1030,990,1010]],
+ ['22','4 Switch + 2 Socket',6,[1610,1550,1590]],
+ ['23','5 Switch + 1 Socket',6,[1610,1550,1590]],
+ ['25','6 Switch + 2 Socket',6,[1700,1640,1680]],
+ ['26','7 Switch + 1 Socket',6,[1700,1640,1680]],
+ ['39','8 Switch + 2 Socket',6,[1770,1730,1750]],
+ ['12','9 Switch + 1 Socket',6,[1770,1730,1750]],
+ ['13','Power Plug 15A',10,[1100,1060,1080]],
+ ['15','Light Plug 5 in 1 Single',10,[1210,1190,1210]],
+ ['19','Light Plug 5 in 1 USB',8,[2660,null,2660]],
+ ['30','Light Plug 10A',10,[1080,1040,1060]],
+ ['16','T.V. Socket',10,[850,810,830]],
+ ['17','Telephone Socket',10,[850,810,830]],
+ ['18','T.V. + Telephone Socket',10,[1080,1050,1060]],
+ ['20','Bell Push',10,[810,790,810]],
+ ['28','Light Plug 5 in 1 Double',6,[2300,null,null]],
+ ['40','Spare Switch 1 Way',25,[170,170,170]],
+ ['41','Spare Switch 2 Way',25,[300,300,300]],
+ ['42','Spare Socket',25,[210,210,210]],
+ ['43','Spare Bell Push Switch',25,[300,300,300]],
+ ['44','Spare TV Socket',25,[400,400,400]],
+ ['45','Spare Tel Socket',25,[400,400,400]],
+ ['46','Fan Dimmer',25,[550,550,550]],
+ ['47','Spare USB',10,[1450,null,1450]],
+ ['48','Power Switch 45A',10,[2100,1800,null]],
+].map(([code,name,pcsBox,p])=>({code,name,pcsBox,prices:{Vector:p[0],Ambit:p[1],WavesCubic:p[2]},stock:120}));
+
+const DEFAULT_CUSTOMERS = [
+ {id:'c1',username:'ali traders',name:'Ali Traders',area:'Lahore',discount:5,balance:0},
+ {id:'c2',username:'khan electricals',name:'Khan Electricals',area:'Faisalabad',discount:8,balance:0},
+ {id:'c3',username:'malik hardware',name:'Malik Hardware',area:'Sargodha',discount:3,balance:0},
+];
+
+/* ============ STATE / STORAGE ============ */
+const state = {catalog:[], customers:[], orders:[], payments:[], user:null};
+
+async function getOrInit(key, def){
+  try{ const r = await window.storage.get(key, true); return JSON.parse(r.value); }
+  catch(e){ await window.storage.set(key, JSON.stringify(def), true); return def; }
+}
+async function persist(key){ try{ await window.storage.set(key, JSON.stringify(state[key]), true); }catch(e){ toast('Could not save — try again','bad'); } }
+
+async function loadAll(){
+  state.catalog   = await getOrInit('catalog', DEFAULT_CATALOG);
+  state.customers = await getOrInit('customers', DEFAULT_CUSTOMERS);
+  state.orders    = await getOrInit('orders', []);
+  state.payments  = await getOrInit('payments', []);
+}
+
+/* ============ HELPERS ============ */
+const fmt = n => 'Rs ' + Number(n||0).toLocaleString();
+const uid = p => p + Math.random().toString(36).slice(2,8);
+function toast(msg, kind){
+  const t=document.createElement('div'); t.className='toast'+(kind?' '+kind:''); t.textContent=msg;
+  document.getElementById('toastWrap').appendChild(t);
+  setTimeout(()=>t.remove(),3400);
+}
+function orderTotal(order){
+  const sub = order.items.reduce((s,i)=>s+i.price*i.qty,0);
+  const disc = sub*(order.discount/100);
+  return {sub, disc, total: sub-disc};
+}
+function custById(id){ return state.customers.find(c=>c.id===id); }
+
+/* ============ LOGIN ============ */
+let selectedRole='customer';
+const roleTabs=[...document.querySelectorAll('.roleTab')];
+const roleIndicator=document.getElementById('roleIndicator');
+function positionIndicator(){
+  const idx=roleTabs.findIndex(t=>t.classList.contains('active'));
+  roleIndicator.style.transform=`translateX(${idx*100}%)`;
+}
+roleTabs.forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    roleTabs.forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active'); selectedRole=tab.dataset.role;
+    positionIndicator();
+    document.getElementById('custSelectWrap').classList.toggle('hidden', selectedRole!=='customer');
+    document.getElementById('userField').classList.toggle('hidden', selectedRole==='customer');
+    document.getElementById('loginErr').textContent='';
+  });
+});
+
+function populateCustSelect(){
+  const sel=document.getElementById('custSelect');
+  sel.innerHTML=state.customers.map(c=>`<option value="${c.id}">${c.name} — ${c.area}</option>`).join('');
+}
+
+document.getElementById('loginForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const err=document.getElementById('loginErr');
+  if(selectedRole==='customer'){
+    const id=document.getElementById('custSelect').value;
+    const c=custById(id);
+    if(!c){ err.textContent='Select a customer account.'; return; }
+    state.user={role:'customer', id:c.id, name:c.name};
+  } else {
+    const uname=document.getElementById('userInput').value.trim().toLowerCase();
+    if(uname!==selectedRole){ err.textContent=`Username should be "${selectedRole}" for this role (demo).`; return; }
+    state.user={role:selectedRole, id:selectedRole, name: selectedRole==='manager'?'Manager':'Store Desk'};
+  }
+  enterApp();
+});
+
+/* ============ APP SHELL / NAV ============ */
+const NAV = {
+  customer:[
+    {key:'catalog', label:'Catalog', icon:icon('grid')},
+    {key:'myorders', label:'My Orders', icon:icon('list')},
+    {key:'account', label:'Account', icon:icon('user')},
+  ],
+  manager:[
+    {key:'orders', label:'Orders', icon:icon('list')},
+    {key:'rates', label:'Rate List', icon:icon('tag')},
+    {key:'customers', label:'Customers', icon:icon('user')},
+    {key:'receiving', label:'Receiving', icon:icon('coin')},
+    {key:'reports', label:'Reports', icon:icon('chart')},
+  ],
+  store:[
+    {key:'dispatch', label:'Orders to Dispatch', icon:icon('box')},
+  ],
+};
+function icon(name){
+  const paths={
+    grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+    list:'<path d="M4 6h16M4 12h16M4 18h10"/>',
+    user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+    tag:'<path d="M3 12l9-9h7v7l-9 9-7-7z"/><circle cx="15" cy="9" r="1.2"/>',
+    coin:'<circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/>',
+    chart:'<path d="M4 20V10M11 20V4M18 20v-7"/>',
+    box:'<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>',
+  };
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name]}</svg>`;
+}
+let activePage=null;
+function buildNav(){
+  const items=NAV[state.user.role];
+  activePage=items[0].key;
+  const wrap=document.getElementById('navGroup');
+  wrap.innerHTML=`<div class="navPill" id="navPill"></div>` + items.map((it,i)=>
+    `<button class="navItem${i===0?' active':''}" data-key="${it.key}">${it.icon}<span>${it.label}</span></button>`).join('');
+  wrap.querySelectorAll('.navItem').forEach((btn,i)=>{
+    btn.addEventListener('click',()=>{
+      wrap.querySelectorAll('.navItem').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active'); positionPill();
+      activePage=btn.dataset.key; renderPage();
+    });
+  });
+  requestAnimationFrame(positionPill);
+}
+function positionPill(){
+  const active=document.querySelector('.navItem.active');
+  const pill=document.getElementById('navPill');
+  if(active && pill) pill.style.transform=`translateY(${active.offsetTop}px)`;
+}
+
+function enterApp(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainScreen').classList.remove('hidden');
+  document.getElementById('avInit').textContent = state.user.name.slice(0,1).toUpperCase();
+  document.getElementById('whoName').textContent = state.user.name;
+  document.getElementById('whoRole').textContent = state.user.role[0].toUpperCase()+state.user.role.slice(1);
+  buildNav();
+  renderPage();
+}
+document.getElementById('logoutBtn').addEventListener('click',()=>{
+  state.user=null; cart={};
+  document.getElementById('mainScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('cartFab').classList.add('hidden');
+  closeDrawer();
+});
+
+function renderPage(){
+  const el=document.getElementById('pageContent');
+  el.classList.remove('page'); void el.offsetWidth; el.classList.add('page');
+  const map={
+    catalog:pageCatalog, myorders:pageMyOrders, account:pageAccount,
+    orders:pageMgrOrders, rates:pageRates, customers:pageCustomers, receiving:pageReceiving, reports:pageReports,
+    dispatch:pageDispatch,
+  };
+  document.getElementById('cartFab').classList.toggle('hidden', !(state.user.role==='customer' && activePage==='catalog'));
+  (map[activePage]||pageCatalog)(el);
+}
+
+/* ============ CUSTOMER: CATALOG + CART ============ */
+let cart={}; // code -> {code,name,qty,series,price}
+let activeSeries='Vector';
+
+function pageCatalog(el){
+  el.innerHTML=`
+    <div class="pageHead"><div><h1>Catalog</h1><p class="sub">Browse the Mesco range and build your order.</p></div></div>
+    <div class="seriesTabs">${SERIES.map(s=>`<button class="seriesTab${s===activeSeries?' active':''}" data-s="${s}">${SERIES_LABEL[s]}</button>`).join('')}</div>
+    <div class="catGrid" id="catGrid"></div>`;
+  el.querySelectorAll('.seriesTab').forEach(b=>b.addEventListener('click',()=>{activeSeries=b.dataset.s; pageCatalog(el);}));
+  const grid=el.querySelector('#catGrid');
+  grid.innerHTML = state.catalog.map(item=>{
+    const price=item.prices[activeSeries];
+    if(price==null) return '';
+    return `<div class="catCard">
+      <div class="code">CODE ${item.code} · ${item.pcsBox}/box</div>
+      <div class="nm">${item.name}</div>
+      <div class="price">${fmt(price)} <small>/ box</small></div>
+      <div class="qtyRow">
+        <button class="qtyBtn" data-act="dec" data-c="${item.code}">–</button>
+        <input type="number" min="1" value="1" id="qty-${item.code}">
+        <button class="qtyBtn" data-act="inc" data-c="${item.code}">+</button>
+        <button class="addBtn" data-add="${item.code}">Add</button>
+      </div></div>`;
+  }).join('');
+  grid.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>{
+    const inp=document.getElementById('qty-'+b.dataset.c);
+    let v=parseInt(inp.value||1);
+    inp.value=Math.max(1, v + (b.dataset.act==='inc'?1:-1));
+  }));
+  grid.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{
+    const code=b.dataset.add;
+    const item=state.catalog.find(i=>i.code===code);
+    const qty=parseInt(document.getElementById('qty-'+code).value||1);
+    const key=code+'-'+activeSeries;
+    if(cart[key]) cart[key].qty+=qty;
+    else cart[key]={code, name:item.name, series:activeSeries, price:item.prices[activeSeries], qty};
+    toast(`Added ${item.name} (${SERIES_LABEL[activeSeries]}) ×${qty}`,'good');
+    renderCartCount();
+  }));
+}
+
+function renderCartCount(){
+  const n=Object.values(cart).reduce((s,i)=>s+i.qty,0);
+  document.getElementById('cartCount').textContent=n;
+  renderDrawer();
+}
+const cartFab=document.getElementById('cartFab');
+const drawer=document.getElementById('cartDrawer');
+const overlay=document.getElementById('drawerOverlay');
+cartFab.addEventListener('click',()=>{drawer.classList.add('open'); overlay.classList.add('open');});
+document.getElementById('drawerClose').addEventListener('click',closeDrawer);
+overlay.addEventListener('click',closeDrawer);
+function closeDrawer(){drawer.classList.remove('open'); overlay.classList.remove('open');}
+
+function renderDrawer(){
+  const body=document.getElementById('drawerBody');
+  const items=Object.entries(cart);
+  if(!items.length){
+    body.innerHTML=`<div class="empty"><div class="ic">🛒</div><b>Your cart is empty</b>Add items from the catalog.</div>`;
+    document.getElementById('drawerFoot').innerHTML='';
+    return;
+  }
+  body.innerHTML=items.map(([key,i])=>`
+    <div class="cartLine">
+      <div><div class="nm">${i.name}</div><div class="meta">${SERIES_LABEL[i.series]} · ${i.qty} box × ${fmt(i.price)}</div></div>
+      <button class="rm" data-rm="${key}">Remove</button>
+    </div>`).join('');
+  body.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{delete cart[b.dataset.rm]; renderCartCount();}));
+  const c=custById(state.user.id);
+  const sub=items.reduce((s,[,i])=>s+i.price*i.qty,0);
+  const disc=sub*(c.discount/100);
+  document.getElementById('drawerFoot').innerHTML=`
+    <div class="sumRow"><span>Subtotal</span><span>${fmt(sub)}</span></div>
+    <div class="sumRow"><span>Your discount (${c.discount}%)</span><span>-${fmt(disc)}</span></div>
+    <div class="sumRow tot"><span>Estimated total</span><span>${fmt(sub-disc)}</span></div>
+    <button class="btnPrimary" id="placeOrderBtn">Place order</button>`;
+  document.getElementById('placeOrderBtn').addEventListener('click', placeOrder);
+}
+
+async function placeOrder(){
+  const c=custById(state.user.id);
+  const items=Object.values(cart).map(i=>({code:i.code,name:i.name,series:i.series,price:i.price,qty:i.qty}));
+  if(!items.length) return;
+  const order={id:uid('ord_'), customerId:c.id, customerName:c.name, discount:c.discount, items,
+    status:'pending', createdAt:Date.now(), history:[{s:'pending', t:Date.now()}]};
+  state.orders.unshift(order);
+  await persist('orders');
+  cart={}; renderCartCount(); closeDrawer();
+  toast('Order placed — waiting on manager approval','good');
+  if(activePage==='catalog') pageCatalog(document.getElementById('pageContent'));
+  if(activePage==='myorders') pageMyOrders(document.getElementById('pageContent'));
+}
+
+/* ============ CUSTOMER: MY ORDERS ============ */
+function pageMyOrders(el){
+  const mine=state.orders.filter(o=>o.customerId===state.user.id);
+  el.innerHTML=`<div class="pageHead"><div><h1>My Orders</h1><p class="sub">Track status from placement to dispatch.</p></div></div>
+   <div class="card">${ordersTableHTML(mine, 'customer')}</div>`;
+}
+
+/* ============ CUSTOMER: ACCOUNT ============ */
+function pageAccount(el){
+  const c=custById(state.user.id);
+  const pays=state.payments.filter(p=>p.customerId===c.id);
+  el.innerHTML=`<div class="pageHead"><div><h1>Account</h1><p class="sub">${c.name} · ${c.area}</p></div></div>
+   <div class="statRow">
+     <div class="statCard"><div class="lbl">Discount rate</div><div class="val">${c.discount}%</div></div>
+     <div class="statCard"><div class="lbl">Balance owed</div><div class="val">${fmt(c.balance)}</div></div>
+     <div class="statCard"><div class="lbl">Orders placed</div><div class="val">${state.orders.filter(o=>o.customerId===c.id).length}</div></div>
+   </div>
+   <div class="card"><div class="cardHead"><h3>Payment history</h3></div>
+   <table><thead><tr><th>Date</th><th>Amount</th><th>Note</th></tr></thead><tbody>
+   ${pays.length?pays.map(p=>`<tr><td>${new Date(p.date).toLocaleDateString()}</td><td>${fmt(p.amount)}</td><td>${p.note||'—'}</td></tr>`).join(''):`<tr><td colspan="3"><div class="empty">No payments recorded yet.</div></td></tr>`}
+   </tbody></table></div>`;
+}
+
+/* ============ SHARED: ORDERS TABLE ============ */
+function statusBadge(s){ return `<span class="badge ${s}">${s.charAt(0).toUpperCase()+s.slice(1)}</span>`; }
+function ordersTableHTML(list, viewer){
+  if(!list.length) return `<div class="empty"><div class="ic">📦</div><b>No orders here</b>Nothing to show yet.</div>`;
+  return `<table><thead><tr>
+    <th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th>${viewer==='manager'||viewer==='store'?'<th></th>':''}
+  </tr></thead><tbody>
+  ${list.map(o=>{
+    const t=orderTotal(o);
+    return `<tr class="rowIn">
+      <td>${o.id.slice(-6).toUpperCase()}<br><span style="color:var(--ink-dim);font-size:11.5px">${new Date(o.createdAt).toLocaleDateString()}</span></td>
+      <td>${o.customerName}</td>
+      <td>${o.items.length} item${o.items.length>1?'s':''} · ${o.items.reduce((s,i)=>s+i.qty,0)} box</td>
+      <td>${fmt(t.total)}</td>
+      <td>${statusBadge(o.status)}</td>
+      ${viewer==='manager'?`<td><div class="btnRow">
+        ${o.status==='pending'?`<button class="btn b-good small" data-approve="${o.id}">Approve</button><button class="btn b-ghost small" data-modify="${o.id}">Modify</button><button class="btn b-bad small" data-deny="${o.id}">Deny</button>`:''}
+        ${o.status==='approved'?`<button class="btn b-ghost small" data-modify="${o.id}">Modify</button>`:''}
+        ${o.status==='dispatched'?`<button class="btn b-ghost small" data-print="${o.id}">Print invoice</button>`:''}
+      </div></td>`:''}
+      ${viewer==='store'?`<td><div class="btnRow">
+        <button class="btn b-ghost small" data-print="${o.id}">Print</button>
+        ${o.status==='approved'?`<button class="btn b-good small" data-dispatch="${o.id}">Mark dispatched</button>`:''}
+      </div></td>`:''}
+    </tr>`;
+  }).join('')}
+  </tbody></table>`;
+}
+
+/* ============ MANAGER: ORDERS ============ */
+function pageMgrOrders(el){
+  const list=state.orders;
+  el.innerHTML=`<div class="pageHead"><div><h1>Orders</h1><p class="sub">Review, approve, or adjust incoming orders.</p></div></div>
+   <div class="statRow">
+     <div class="statCard"><div class="lbl">Pending</div><div class="val">${list.filter(o=>o.status==='pending').length}</div></div>
+     <div class="statCard"><div class="lbl">Approved</div><div class="val">${list.filter(o=>o.status==='approved').length}</div></div>
+     <div class="statCard"><div class="lbl">Dispatched</div><div class="val">${list.filter(o=>o.status==='dispatched').length}</div></div>
+     <div class="statCard"><div class="lbl">Denied</div><div class="val">${list.filter(o=>o.status==='denied').length}</div></div>
+   </div>
+   <div class="card">${ordersTableHTML(list,'manager')}</div>`;
+  el.querySelectorAll('[data-approve]').forEach(b=>b.addEventListener('click',()=>setOrderStatus(b.dataset.approve,'approved')));
+  el.querySelectorAll('[data-deny]').forEach(b=>b.addEventListener('click',()=>setOrderStatus(b.dataset.deny,'denied')));
+  el.querySelectorAll('[data-modify]').forEach(b=>b.addEventListener('click',()=>openModifyModal(b.dataset.modify)));
+  el.querySelectorAll('[data-print]').forEach(b=>b.addEventListener('click',()=>printOrder(b.dataset.print)));
+}
+async function setOrderStatus(id, status){
+  const o=state.orders.find(o=>o.id===id);
+  o.status=status; o.history.push({s:status,t:Date.now()});
+  await persist('orders');
+  toast(`Order ${id.slice(-6).toUpperCase()} ${status}`, status==='denied'?'bad':'good');
+  renderPage();
+}
+function openModifyModal(id){
+  const o=state.orders.find(o=>o.id===id);
+  const box=document.getElementById('modalBox');
+  box.innerHTML=`<div class="modalHead"><h3>Modify order ${id.slice(-6).toUpperCase()}</h3><button class="drawerClose" id="mClose">✕</button></div>
+   <div class="modalBody">
+     ${o.items.map((it,idx)=>`<div class="modLine"><span class="nm">${it.name} <span style="color:var(--ink-dim)">(${SERIES_LABEL[it.series]})</span></span><input type="number" min="0" value="${it.qty}" id="mqty-${idx}"></div>`).join('')}
+     <p style="font-size:12px;color:var(--ink-dim);margin-top:12px;">Set a quantity to 0 to remove an item. Changes apply immediately and the order moves to <b>Approved</b> — the customer sees the final version, no separate approval needed from them.</p>
+   </div>
+   <div class="modalFoot"><button class="btn b-ghost" id="mCancel">Cancel</button><button class="btn b-primary" id="mSave">Save & approve</button></div>`;
+  document.getElementById('modalOverlay').classList.add('open');
+  const close=()=>document.getElementById('modalOverlay').classList.remove('open');
+  document.getElementById('mClose').addEventListener('click',close);
+  document.getElementById('mCancel').addEventListener('click',close);
+  document.getElementById('mSave').addEventListener('click', async ()=>{
+    o.items.forEach((it,idx)=>{ it.qty=parseInt(document.getElementById('mqty-'+idx).value||0); });
+    o.items=o.items.filter(it=>it.qty>0);
+    o.status='approved'; o.history.push({s:'modified',t:Date.now()});
+    await persist('orders');
+    close(); toast('Order modified and approved','good'); renderPage();
+  });
+}
+function printOrder(id){
+  const o=state.orders.find(o=>o.id===id);
+  const t=orderTotal(o);
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>Invoice ${id}</title><style>
+    body{font-family:Arial,sans-serif;padding:40px;color:#0F1B33}
+    h1{margin:0 0 2px} .m{color:#5A6786;margin-bottom:20px}
+    table{width:100%;border-collapse:collapse;margin-top:16px} th,td{padding:8px;border-bottom:1px solid #E4E9F2;text-align:left;font-size:13px}
+    .tot{font-weight:bold;font-size:16px}
+  </style></head><body>
+  <h1>MESCO</h1><div class="m">Invoice for order ${id.slice(-6).toUpperCase()} · ${new Date(o.createdAt).toLocaleDateString()}</div>
+  <div><b>Customer:</b> ${o.customerName}</div>
+  <table><thead><tr><th>Item</th><th>Series</th><th>Qty (box)</th><th>Price</th><th>Line total</th></tr></thead><tbody>
+  ${o.items.map(i=>`<tr><td>${i.name}</td><td>${SERIES_LABEL[i.series]}</td><td>${i.qty}</td><td>${fmt(i.price)}</td><td>${fmt(i.price*i.qty)}</td></tr>`).join('')}
+  </tbody></table>
+  <table><tr><td>Subtotal</td><td style="text-align:right">${fmt(t.sub)}</td></tr>
+  <tr><td>Discount (${o.discount}%)</td><td style="text-align:right">-${fmt(t.disc)}</td></tr>
+  <tr class="tot"><td>Total</td><td style="text-align:right">${fmt(t.total)}</td></tr></table>
+  </body></html>`);
+  w.document.close(); w.print();
+}
+
+/* ============ MANAGER: RATE LIST ============ */
+function pageRates(el){
+  el.innerHTML=`<div class="pageHead"><div><h1>Rate List</h1><p class="sub">Edit prices per series. Blank = not available in that series.</p></div>
+   <div class="btnRow"><button class="btn b-primary" id="addItemBtn">+ Add item</button></div></div>
+   <div class="card"><table><thead><tr><th>Code</th><th>Item</th><th>Pcs/Box</th><th>Vector</th><th>Ambit</th><th>Waves/Cubic</th><th></th></tr></thead>
+   <tbody id="rateBody"></tbody></table></div>`;
+  const body=el.querySelector('#rateBody');
+  body.innerHTML=state.catalog.map((it,idx)=>`
+    <tr class="rowIn">
+      <td>${it.code}</td><td>${it.name}</td><td>${it.pcsBox}</td>
+      <td><input type="number" data-idx="${idx}" data-s="Vector" value="${it.prices.Vector??''}" style="width:80px;padding:6px;border:1.5px solid var(--line);border-radius:6px"></td>
+      <td><input type="number" data-idx="${idx}" data-s="Ambit" value="${it.prices.Ambit??''}" style="width:80px;padding:6px;border:1.5px solid var(--line);border-radius:6px"></td>
+      <td><input type="number" data-idx="${idx}" data-s="WavesCubic" value="${it.prices.WavesCubic??''}" style="width:80px;padding:6px;border:1.5px solid var(--line);border-radius:6px"></td>
+      <td><button class="btn b-bad small" data-del="${idx}">Remove</button></td>
+    </tr>`).join('');
+  body.querySelectorAll('input').forEach(inp=>inp.addEventListener('change', async ()=>{
+    const it=state.catalog[inp.dataset.idx];
+    const v=inp.value===''?null:parseFloat(inp.value);
+    it.prices[inp.dataset.s]=v; await persist('catalog'); toast('Rate updated','good');
+  }));
+  body.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', async ()=>{
+    state.catalog.splice(b.dataset.del,1); await persist('catalog'); toast('Item removed','bad'); pageRates(el);
+  }));
+  el.querySelector('#addItemBtn').addEventListener('click', ()=>openAddItemModal());
+}
+function openAddItemModal(){
+  const box=document.getElementById('modalBox');
+  box.innerHTML=`<div class="modalHead"><h3>Add catalog item</h3><button class="drawerClose" id="mClose">✕</button></div>
+   <div class="modalBody">
+     <div class="field"><label>Code</label><input id="niCode" placeholder="e.g. 49"></div>
+     <div class="field"><label>Name</label><input id="niName" placeholder="e.g. USB Charger 2-Port"></div>
+     <div class="field"><label>Pcs / box</label><input id="niPcs" type="number" value="10"></div>
+     <div class="field"><label>Vector price</label><input id="niV" type="number"></div>
+     <div class="field"><label>Ambit price</label><input id="niA" type="number"></div>
+     <div class="field"><label>Waves/Cubic price</label><input id="niW" type="number"></div>
+   </div>
+   <div class="modalFoot"><button class="btn b-ghost" id="mCancel">Cancel</button><button class="btn b-primary" id="mSave">Add item</button></div>`;
+  document.getElementById('modalOverlay').classList.add('open');
+  const close=()=>document.getElementById('modalOverlay').classList.remove('open');
+  document.getElementById('mClose').addEventListener('click',close);
+  document.getElementById('mCancel').addEventListener('click',close);
+  document.getElementById('mSave').addEventListener('click', async ()=>{
+    const code=document.getElementById('niCode').value.trim();
+    const name=document.getElementById('niName').value.trim();
+    if(!code||!name){ toast('Code and name are required','bad'); return; }
+    state.catalog.push({code,name,pcsBox:parseInt(document.getElementById('niPcs').value||10),
+      prices:{Vector:parseFloat(document.getElementById('niV').value)||null,
+               Ambit:parseFloat(document.getElementById('niA').value)||null,
+               WavesCubic:parseFloat(document.getElementById('niW').value)||null}, stock:0});
+    await persist('catalog'); close(); toast('Item added','good'); renderPage();
+  });
+}
+
+/* ============ MANAGER: CUSTOMERS ============ */
+function pageCustomers(el){
+  el.innerHTML=`<div class="pageHead"><div><h1>Customers</h1><p class="sub">Set discount rates and see balances.</p></div></div>
+   <div class="card"><table><thead><tr><th>Customer</th><th>Area</th><th>Discount %</th><th>Balance owed</th></tr></thead>
+   <tbody id="custBody"></tbody></table></div>`;
+  const body=el.querySelector('#custBody');
+  body.innerHTML=state.customers.map((c,idx)=>`
+    <tr class="rowIn"><td>${c.name}</td><td>${c.area}</td>
+      <td><input type="number" min="0" max="100" data-idx="${idx}" value="${c.discount}" style="width:70px;padding:6px;border:1.5px solid var(--line);border-radius:6px"></td>
+      <td>${fmt(c.balance)}</td></tr>`).join('');
+  body.querySelectorAll('input').forEach(inp=>inp.addEventListener('change', async ()=>{
+    state.customers[inp.dataset.idx].discount=parseFloat(inp.value||0);
+    await persist('customers'); toast('Discount updated','good');
+  }));
+}
+
+/* ============ MANAGER: RECEIVING ============ */
+function pageReceiving(el){
+  el.innerHTML=`<div class="pageHead"><div><h1>Receiving</h1><p class="sub">Log customer payments against their outstanding balance.</p></div>
+   <div class="btnRow"><button class="btn b-primary" id="logPayBtn">+ Log payment</button></div></div>
+   <div class="card"><table><thead><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Note</th></tr></thead>
+   <tbody>${state.payments.length?state.payments.map(p=>`<tr class="rowIn"><td>${new Date(p.date).toLocaleDateString()}</td><td>${custById(p.customerId)?.name||'—'}</td><td>${fmt(p.amount)}</td><td>${p.note||'—'}</td></tr>`).join(''):`<tr><td colspan="4"><div class="empty">No payments logged yet.</div></td></tr>`}</tbody></table></div>`;
+  el.querySelector('#logPayBtn').addEventListener('click',()=>{
+    const box=document.getElementById('modalBox');
+    box.innerHTML=`<div class="modalHead"><h3>Log payment received</h3><button class="drawerClose" id="mClose">✕</button></div>
+     <div class="modalBody">
+       <div class="field"><label>Customer</label><select id="pCust">${state.customers.map(c=>`<option value="${c.id}">${c.name} (owes ${fmt(c.balance)})</option>`).join('')}</select></div>
+       <div class="field"><label>Amount received</label><input id="pAmt" type="number" placeholder="0"></div>
+       <div class="field"><label>Note (optional)</label><input id="pNote" placeholder="e.g. Bank transfer"></div>
+     </div>
+     <div class="modalFoot"><button class="btn b-ghost" id="mCancel">Cancel</button><button class="btn b-primary" id="mSave">Log payment</button></div>`;
+    document.getElementById('modalOverlay').classList.add('open');
+    const close=()=>document.getElementById('modalOverlay').classList.remove('open');
+    document.getElementById('mClose').addEventListener('click',close);
+    document.getElementById('mCancel').addEventListener('click',close);
+    document.getElementById('mSave').addEventListener('click', async ()=>{
+      const cid=document.getElementById('pCust').value;
+      const amt=parseFloat(document.getElementById('pAmt').value||0);
+      if(amt<=0){ toast('Enter a valid amount','bad'); return; }
+      state.payments.unshift({id:uid('pay_'), customerId:cid, amount:amt, note:document.getElementById('pNote').value, date:Date.now()});
+      const c=custById(cid); c.balance-=amt;
+      await persist('payments'); await persist('customers');
+      close(); toast('Payment logged','good'); renderPage();
+    });
+  });
+}
+
+/* ============ MANAGER: REPORTS ============ */
+function pageReports(el){
+  const dispatched=state.orders.filter(o=>o.status==='dispatched');
+  const totalSales=dispatched.reduce((s,o)=>s+orderTotal(o).total,0);
+  const byCust={};
+  dispatched.forEach(o=>{ byCust[o.customerName]=(byCust[o.customerName]||0)+orderTotal(o).total; });
+  const byArea={};
+  dispatched.forEach(o=>{ const c=custById(o.customerId); const a=c?c.area:'—'; byArea[a]=(byArea[a]||0)+orderTotal(o).total; });
+  const owed=state.customers.reduce((s,c)=>s+c.balance,0);
+
+  el.innerHTML=`<div class="pageHead"><div><h1>Reports</h1><p class="sub">Sales, stock movement and receivables at a glance.</p></div></div>
+   <div class="statRow">
+     <div class="statCard"><div class="lbl">Total sales (dispatched)</div><div class="val">${fmt(totalSales)}</div></div>
+     <div class="statCard"><div class="lbl">Orders dispatched</div><div class="val">${dispatched.length}</div></div>
+     <div class="statCard"><div class="lbl">Outstanding receivables</div><div class="val">${fmt(owed)}</div></div>
+     <div class="statCard"><div class="lbl">Payments logged</div><div class="val">${state.payments.length}</div></div>
+   </div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+     <div class="card"><div class="cardHead"><h3>Sales by customer</h3></div>
+       <table><thead><tr><th>Customer</th><th>Sales</th></tr></thead><tbody>
+       ${Object.keys(byCust).length?Object.entries(byCust).map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}</td></tr>`).join(''):`<tr><td colspan="2"><div class="empty">No dispatched sales yet.</div></td></tr>`}
+       </tbody></table></div>
+     <div class="card"><div class="cardHead"><h3>Sales by area</h3></div>
+       <table><thead><tr><th>Area</th><th>Sales</th></tr></thead><tbody>
+       ${Object.keys(byArea).length?Object.entries(byArea).map(([k,v])=>`<tr><td>${k}</td><td>${fmt(v)}</td></tr>`).join(''):`<tr><td colspan="2"><div class="empty">No dispatched sales yet.</div></td></tr>`}
+       </tbody></table></div>
+   </div>`;
+}
+
+/* ============ STORE: DISPATCH ============ */
+function pageDispatch(el){
+  const list=state.orders.filter(o=>o.status==='approved'||o.status==='dispatched').sort((a,b)=>b.createdAt-a.createdAt);
+  el.innerHTML=`<div class="pageHead"><div><h1>Orders to Dispatch</h1><p class="sub">Approved orders ready to go out. Print, then mark dispatched.</p></div></div>
+   <div class="card">${ordersTableHTML(list,'store')}</div>`;
+  el.querySelectorAll('[data-dispatch]').forEach(b=>b.addEventListener('click', async ()=>{
+    const o=state.orders.find(o=>o.id===b.dataset.dispatch);
+    o.status='dispatched'; o.history.push({s:'dispatched',t:Date.now()});
+    const c=custById(o.customerId); c.balance += orderTotal(o).total;
+    await persist('orders'); await persist('customers');
+    toast(`Order dispatched — ${fmt(orderTotal(o).total)} added to ${c.name}'s balance`,'good');
+    renderPage();
+  }));
+  el.querySelectorAll('[data-print]').forEach(b=>b.addEventListener('click',()=>printOrder(b.dataset.print)));
+}
+
+/* ============ INIT ============ */
+(async function init(){
+  positionIndicator();
+  await loadAll();
+  populateCustSelect();
+})();
+</script>
+</body>
+</html>

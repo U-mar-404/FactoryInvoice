@@ -1,0 +1,223 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+  MANAGER
+  STORE
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  DISPATCHED
+  DENIED
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  name         String
+  passwordHash String
+  role         Role
+  customerId   String?   @unique
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Agent {
+  id        String     @id @default(uuid())
+  name      String
+  contact   String?
+  customers Customer[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Customer {
+  id              String                   @id @default(uuid())
+  userId          String?                  @unique
+  user            User?
+  username        String                   @unique
+  name            String
+  phone           String                   @default("")
+  area            String
+  city            String                   @default("")
+  address         String                   @default("")
+  agentId         String?
+  agent           Agent?                   @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  discount        Float                    @default(0)
+  balance         Int                      @default(0)
+  seriesDiscounts CustomerSeriesDiscount[]
+  orders          Order[]
+  payments        Payment[]
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+}
+
+model CustomerSeriesDiscount {
+  id              String   @id @default(uuid())
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  seriesId        String
+  series          Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  discountPercent Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([customerId, seriesId])
+}
+
+model ItemType {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  pcsBox    Int
+  isActive  Boolean  @default(true)
+  skus      SKU[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Series {
+  id                String                   @id @default(uuid())
+  name              String                   @unique
+  isActive          Boolean                  @default(true)
+  colors            Color[]
+  skus              SKU[]
+  customerDiscounts CustomerSeriesDiscount[]
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+}
+
+model Color {
+  id        String   @id @default(uuid())
+  seriesId  String
+  series    Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  name      String
+  isActive  Boolean  @default(true)
+  skus      SKU[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([seriesId, name])
+}
+
+model SKU {
+  id            String         @id @default(uuid())
+  itemTypeId    String
+  seriesId      String
+  colorId       String
+  itemType      ItemType       @relation(fields: [itemTypeId], references: [id], onDelete: Cascade)
+  series        Series         @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  color         Color          @relation(fields: [colorId], references: [id], onDelete: Cascade)
+  currentPrice  Int?
+  stockQty      Int            @default(100)
+  minStockLevel Int            @default(10)
+  isActive      Boolean        @default(true)
+  priceHistory  PriceHistory[]
+  orderItems    OrderItem[]
+  stockReceipts StockReceipt[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([itemTypeId, seriesId, colorId])
+}
+
+model PriceHistory {
+  id        String   @id @default(uuid())
+  skuId     String
+  sku       SKU      @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  price     Int
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id          String         @id @default(uuid())
+  customerId  String
+  customer    Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  discount    Float          @default(0)
+  totalAmount Int            @default(0)
+  status      OrderStatus    @default(PENDING)
+  items       OrderItem[]
+  history     OrderHistory[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model OrderItem {
+  id              String   @id @default(uuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  skuId           String?
+  sku             SKU?     @relation(fields: [skuId], references: [id], onDelete: SetNull)
+  itemCode        String
+  itemName        String
+  seriesName      String
+  colorName       String   @default("Standard")
+  price           Int
+  discountPercent Float    @default(0)
+  qty             Int
+  createdAt       DateTime @default(now())
+}
+
+model OrderHistory {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String
+  createdAt DateTime @default(now())
+}
+
+model Payment {
+  id         String   @id @default(uuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  amount     Int
+  note       String?
+  date       DateTime @default(now())
+}
+
+model StockReceipt {
+  id          String   @id @default(uuid())
+  skuId       String
+  sku         SKU      @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  qty         Int
+  addedById   String?
+  addedByName String?
+  note        String?
+  createdAt   DateTime @default(now())
+}
+
+model WhatsAppSetting {
+  id                      String   @id @default("default")
+  dispatchMessageTemplate String   @default("Hi {customerName}, your order #{orderId} has been dispatched.")
+  updatedAt               DateTime @updatedAt
+}
+
+enum WhatsAppLogStatus {
+  SENT
+  FAILED
+  SKIPPED_NO_PHONE
+}
+
+model WhatsAppLog {
+  id           String            @id @default(uuid())
+  orderId      String
+  customerName String
+  phone        String
+  message      String
+  status       WhatsAppLogStatus
+  hasPdf       Boolean           @default(true)
+  pdfStatus    WhatsAppLogStatus @default(SENT)
+  error        String?
+  createdAt    DateTime          @default(now())
+}
