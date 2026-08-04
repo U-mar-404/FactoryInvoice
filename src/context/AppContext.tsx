@@ -37,6 +37,21 @@ function setStored<T>(key: string, val: T): void {
   }
 }
 
+export function getInitialPageForRole(role?: Role | null): string {
+  if (!role) return 'catalog';
+  switch (role) {
+    case 'admin':
+      return 'users';
+    case 'manager':
+      return 'orders';
+    case 'store':
+      return 'dispatch';
+    case 'customer':
+    default:
+      return 'catalog';
+  }
+}
+
 interface AppContextType {
   user: User | null;
   catalog: CatalogItem[];
@@ -149,19 +164,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  const getInitialPageForRole = (role: Role): string => {
-    switch (role) {
-      case 'admin':
-        return 'users';
-      case 'manager':
-        return 'orders';
-      case 'store':
-        return 'dispatch';
-      case 'customer':
-      default:
-        return 'catalog';
-    }
-  };
+
 
   const refreshData = async () => {
     const token = localStorage.getItem('token');

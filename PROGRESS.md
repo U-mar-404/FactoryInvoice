@@ -305,7 +305,14 @@ Next: Final system verification and deployment readiness.
 - Cleaned up [Login.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/auth/Login.tsx): initialized password state to empty, removed pre-filled value and demo accounts list box, and added eye show/hide password toggle button.
 - Confirmed zero build errors and verified rejection of blank/wrong passwords across all roles via automated test suite.
 
+
+## 2026-08-04 (Initialization-Order TDZ Fix & Silent ErrorBoundary Auto-Redirect)
+- Fixed root cause `ReferenceError: Cannot access 'getInitialPageForRole' before initialization` on refresh by exporting `getInitialPageForRole` as a top-level helper function above `AppProvider` in [AppContext.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/context/AppContext.tsx).
+- Updated [ErrorBoundary.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/common/ErrorBoundary.tsx) to log rendering errors silently to browser console, clear invalid local storage sessions, and automatically redirect to sign in without showing technical error screens.
+- Confirmed zero build errors and clean page refreshes across all four roles (Admin, Manager, Store, Customer).
+
 Next: Await further feature directives or user feedback.
+
 
 
 

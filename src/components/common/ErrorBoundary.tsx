@@ -6,59 +6,42 @@ interface Props {
 
 interface State {
   hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    error: null,
-    errorInfo: null,
   };
 
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error, errorInfo: null };
+  public static getDerivedStateFromError(_error: Error): State {
+    return { hasError: true };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Unhandled React error:', error, errorInfo);
-    this.setState({ errorInfo });
+    console.error('[ErrorBoundary] Unhandled React rendering error caught:', error, errorInfo);
+
+    // Silently reset session in localStorage to prevent crash loops
+    try {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.clear();
+    } catch (e) {
+      console.error('[ErrorBoundary] Error clearing session:', e);
+    }
+
+    // Automatically redirect cleanly to login screen
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 100);
   }
 
   public render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '40px', maxWidth: '600px', margin: '40px auto', fontFamily: 'sans-serif' }}>
-          <div className="card" style={{ padding: '28px' }}>
-            <h2 style={{ color: 'var(--bad, #D9432E)', marginTop: 0 }}>Application Error Caught</h2>
-            <p style={{ color: 'var(--ink-dim, #5A6786)' }}>
-              An unexpected UI rendering error occurred. Details below:
-            </p>
-            <div
-              style={{
-                background: '#FCE2DE',
-                color: '#D9432E',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                fontFamily: 'monospace',
-                fontSize: '13px',
-                marginBottom: '16px',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-              }}
-            >
-              {this.state.error?.toString()}
-            </div>
-            <button
-              className="btn b-primary"
-              onClick={() => {
-                localStorage.clear();
-                window.location.reload();
-              }}
-            >
-              Reset Session &amp; Reload App
-            </button>
+        <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: '#0B1B42', color: '#fff', fontFamily: 'sans-serif' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div className="spinner" style={{ margin: '0 auto 16px', borderTopColor: '#2F6FED' }}></div>
+            <div style={{ fontSize: '14px', opacity: 0.8 }}>Redirecting to sign in...</div>
           </div>
         </div>
       );
