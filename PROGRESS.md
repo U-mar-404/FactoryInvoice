@@ -206,7 +206,17 @@ Next: Final system verification and deployment readiness.
 - Wrapped all data tables across all 4 roles (**OrdersTable**, **Customers**, **StockPage**, **Receiving**, **ProductsPage**, **RateList**, **AgentsPage**, **Reports**, **UsersPage**, **Account**, **WhatsAppSettingsPage**) in `<div className="tableResponsive">` containers for smooth touch scrolling inside cards.
 - Verified clean TypeScript compilation (`tsc --noEmit`) and Vite production build (`vite build`).
 
-Next: Final system verification and deployment readiness.
+## 2026-08-04 (Configurable API Base URL, Dynamic Host Resolution & LAN Testing)
+- Added `VITE_API_BASE_URL` support with dynamic host resolution in [client.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/api/client.ts) (`getApiBaseUrl()`) so mobile devices accessing over LAN automatically connect to host server without code edits.
+- Explicitly bound backend server in [index.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/src/index.ts) to `0.0.0.0` and updated CORS middleware to support LAN IP origins with credentials.
+- Added user-facing error toasts and diagnostic `console.error` logs for network failures.
+- Added [.env](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/.env), [.env.example](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/.env.example), and [README.md](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/README.md) with local dev, LAN testing, and Capacitor mobile build documentation.
+
+## 2026-08-04 (GitHub Repository Push)
+- Created [.gitignore](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/.gitignore) excluding `node_modules`, `.env`, `dist`, and WhatsApp session credentials (`baileys_auth_info/`).
+- Initialized Git repository, set main branch, and pushed initial commit to [FactoryInvoice](https://github.com/U-mar-404/FactoryInvoice.git).
+
+Next: Project successfully pushed to GitHub.
 
 
 
