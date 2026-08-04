@@ -14,7 +14,7 @@ Your price list hierarchy is fully dynamic and manager-managed — this forms th
 
 - **Series** — Dynamic, manager-managed product lines (e.g., Vector, Ambit, Waves-Cubic, Elegance) — not a hardcoded list.
 - **Color** — Belongs to a Series (a series has its own set of available colors, e.g. Vector: Gold, White, Black).
-- **Item Type (Product)** — the actual product (e.g. "01 – 1 Gang 1 Way Switch", "13 – Power Plug 15A"), with a code and pcs/box, consistent across all series.
+- **Item Type (Product)** — the actual product (e.g. "01 – 1 Gang 1 Way Switch", "13 – Power Plug 15A"), with a code, pcs/box, and optional product thumbnail image (`imageUrl`, stored locally under `backend/uploads/products/` served via `/uploads`, structured for easy future S3/cloud storage backup planning), consistent across all series.
 - **SKU / Variant** — the sellable unit: Item Type + Series + Color, each with its own price and stock count.
 - **Price History** — every SKU's price over time (like your "01-08-2022" list). Invoices always snapshot the price at the moment of sale — so if you update the rate list next month, old invoices don't silently change.
 - **Soft Deletion Protections** — Products, Series, Colors, or SKUs referenced by historical orders are soft-deleted (`isActive = false`) rather than hard-deleted to ensure order history integrity remains intact.

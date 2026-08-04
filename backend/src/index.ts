@@ -59,6 +59,9 @@ app.use('/api/agents', agentRoutes);
 app.use('/api/stock', stockRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 
+// Serve static uploaded files (e.g. product thumbnail images)
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

@@ -197,6 +197,7 @@ export const apiClient = {
       code: string;
       name: string;
       pcsBox: number;
+      imageUrl?: string | null;
       rates: { seriesId: string; colorId: string; price: number | null }[];
     }): Promise<ProductItem> => {
       return request<ProductItem>('/products', {
@@ -210,6 +211,7 @@ export const apiClient = {
         code?: string;
         name?: string;
         pcsBox?: number;
+        imageUrl?: string | null;
         isActive?: boolean;
         rates?: { seriesId: string; colorId: string; price: number | null }[];
       }
@@ -218,6 +220,33 @@ export const apiClient = {
         method: 'PUT',
         body: JSON.stringify(productData),
       });
+    },
+    uploadImage: async (file: File): Promise<{ imageUrl: string }> => {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const token = localStorage.getItem('mesco_auth_token');
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${getApiBaseUrl()}/products/upload`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!res.ok) {
+        let errMsg = 'Error uploading file';
+        try {
+          const errData = await res.json();
+          if (errData.message) errMsg = errData.message;
+        } catch (_) {}
+        throw new Error(errMsg);
+      }
+
+      return res.json();
     },
     deleteProduct: async (id: string): Promise<{ softDeleted: boolean; message: string }> => {
       return request(`/products/${id}`, {

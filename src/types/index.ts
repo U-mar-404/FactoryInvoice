@@ -40,6 +40,7 @@ export interface ProductItem {
   code: string;
   name: string;
   pcsBox: number;
+  imageUrl?: string | null;
   isActive: boolean;
   skus: SKUItem[];
 }
@@ -71,9 +72,11 @@ export interface SeriesPrices {
 }
 
 export interface CatalogItem {
+  id?: string;
   code: string;
   name: string;
   pcsBox: number;
+  imageUrl?: string | null;
   prices: SeriesPrices;
   colorsBySeries?: Record<string, { id: string; name: string; price: number | null }[]>;
   skus?: { id: string; seriesName: string; colorName: string; price: number | null }[];

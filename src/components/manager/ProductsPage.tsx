@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ColorItem, ProductItem, SeriesItem } from '../../types';
-import { apiClient } from '../../api/client';
+import { apiClient, getApiBaseUrl } from '../../api/client';
 import { useApp } from '../../context/AppContext';
 import { fmt } from '../../utils/formatters';
 import { ProductModal } from './ProductModal';
@@ -457,6 +457,7 @@ export const ProductsPage: React.FC = () => {
                   <table className="tbl">
                     <thead>
                       <tr>
+                        <th style={{ width: '50px' }}>Image</th>
                         <th>Code</th>
                         <th>Product Name</th>
                         <th>Pcs/Box</th>
@@ -473,6 +474,31 @@ export const ProductsPage: React.FC = () => {
 
                         return (
                           <tr key={p.id} className="rowIn">
+                            <td>
+                              <div
+                                style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  borderRadius: '6px',
+                                  overflow: 'hidden',
+                                  background: '#F8FAFC',
+                                  border: '1px solid var(--line)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                {p.imageUrl ? (
+                                  <img
+                                    src={p.imageUrl.startsWith('http') ? p.imageUrl : `${getApiBaseUrl()}${p.imageUrl.startsWith('/') ? '' : '/'}${p.imageUrl}`}
+                                    alt={p.name}
+                                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                  />
+                                ) : (
+                                  <span style={{ fontSize: '18px', opacity: 0.5 }}>🔌</span>
+                                )}
+                              </div>
+                            </td>
                             <td>
                               <b>{p.code}</b>
                             </td>
@@ -527,13 +553,39 @@ export const ProductsPage: React.FC = () => {
                     const skusInSeries = p.skus.filter((s) => s.seriesId === selectedSeries.id);
                     return (
                       <div key={p.id} className="mCard">
-                        {/* Top Row: Name, Code & Status */}
+                        {/* Top Row: Thumbnail, Name, Code & Status */}
                         <div className="mCardHeader">
-                          <div>
-                            <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--navy)' }}>
-                              {p.name}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div
+                              style={{
+                                width: '44px',
+                                height: '44px',
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                background: '#F8FAFC',
+                                border: '1px solid var(--line)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                              }}
+                            >
+                              {p.imageUrl ? (
+                                <img
+                                  src={p.imageUrl.startsWith('http') ? p.imageUrl : `${getApiBaseUrl()}${p.imageUrl.startsWith('/') ? '' : '/'}${p.imageUrl}`}
+                                  alt={p.name}
+                                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                />
+                              ) : (
+                                <span style={{ fontSize: '20px', opacity: 0.5 }}>🔌</span>
+                              )}
                             </div>
-                            <div style={{ fontSize: '11.5px', color: 'var(--ink-dim)' }}>CODE {p.code}</div>
+                            <div>
+                              <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--navy)' }}>
+                                {p.name}
+                              </div>
+                              <div style={{ fontSize: '11.5px', color: 'var(--ink-dim)' }}>CODE {p.code}</div>
+                            </div>
                           </div>
                           {p.isActive ? (
                             <span className="badge dispatched">Active</span>

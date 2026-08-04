@@ -29,7 +29,7 @@ Reference prototype (working HTML/JS mock with the full UI and flow already vali
 - `Agent` — Manager-managed sales agent entity (name, contact info, linked to assigned Customers).
 - `Series` — Manager-managed entity (name, e.g. Vector, Ambit, WavesCubic, Elegance, etc.) — not a hardcoded list.
 - `Color` — Belongs to a Series (a series has its own set of available colors, e.g. Vector: Gold/White/Black).
-- `ItemType` (`Product`) — code, name, pcs/box (shared across all series).
+- `ItemType` (`Product`) — code, name, pcs/box, optional `imageUrl` (thumbnail image stored locally under `backend/uploads/products/` served via `/uploads`, structured for easy future S3/cloud storage backup planning).
 - `SKU` — the sellable unit: ItemType + Series + Color, each with its own current price, `stockQty`, and `minStockLevel`.
 - `PriceHistory` — every SKU's price over time. **Orders/invoices always snapshot the price at order time — never read live prices for existing orders.**
 - `Customer` — business account (name, phone number, area, city, address, balance owed, assigned agentId, per-series discounts, linked to User account). Customer city and address appear on Store's packing slip for delivery/logistics purposes.

@@ -233,7 +233,14 @@ Next: Final system verification and deployment readiness.
 - Fixed simultaneous rendering bug so viewports `> 768px` render strictly desktop tables, and viewports `<= 768px` render strictly mobile data cards with zero overlap.
 - Verified clean build (`tsc --noEmit` and `vite build`).
 
+
+## 2026-08-04 (Product Thumbnail Image Upload & Catalog Card Display)
+- Added `imageUrl` optional field to `ItemType` schema with Prisma migration, local disk file storage under `backend/uploads/products/` served via Express static route `/uploads`, and file validation (JPG/PNG/WEBP up to 2MB).
+- Built Multer image upload endpoint `POST /api/products/upload`, file picker + preview thumbnail controls in [ProductModal.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/manager/ProductModal.tsx), and thumbnail image columns on Manager [ProductsPage.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/manager/ProductsPage.tsx).
+- Displayed consistent 140px product thumbnail image containers with clean fallback placeholder graphics on Customer [Catalog.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/customer/Catalog.tsx). Updated [GEMINI.md](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/GEMINI.md) and [project-spec.md](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/project-spec.md).
+
 Next: Await further feature directives or user feedback.
+
 
 
 

@@ -81,6 +81,7 @@ model ItemType {
   code      String   @unique
   name      String
   pcsBox    Int
+  imageUrl  String?
   isActive  Boolean  @default(true)
   skus      SKU[]
   createdAt DateTime @default(now())

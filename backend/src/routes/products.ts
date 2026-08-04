@@ -1,9 +1,62 @@
 import { Router, Response } from 'express';
 import { PrismaClient, Role } from '@prisma/client';
 import { authenticateToken, requireRole, AuthenticatedRequest } from '../middleware/auth.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 const router = Router();
 const prisma = new PrismaClient();
+
+const uploadDir = path.join(process.cwd(), 'uploads/products');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const uniqueName = `prod-${Date.now()}-${Math.floor(Math.random() * 1e9)}${ext}`;
+    cb(null, uniqueName);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB max size
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (allowed.includes(file.mimetype.toLowerCase())) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPG, PNG, and WEBP images are allowed.'));
+    }
+  },
+});
+
+// POST /api/products/upload - Upload product thumbnail image (Manager & Admin)
+router.post('/upload', authenticateToken, requireRole([Role.MANAGER, Role.ADMIN]), (req: AuthenticatedRequest, res: Response) => {
+  upload.single('file')(req, res, (err: any) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ message: 'File too large. Maximum image size is 2MB.' });
+      }
+      return res.status(400).json({ message: err.message });
+    } else if (err) {
+      return res.status(400).json({ message: err.message || 'Error uploading file' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    const imageUrl = `/uploads/products/${req.file.filename}`;
+    return res.json({ imageUrl });
+  });
+});
 
 // GET /api/products/series - Get all active series with their colors
 router.get('/series', authenticateToken, async (_req: AuthenticatedRequest, res: Response) => {
@@ -278,6 +331,7 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Respon
         code: p.code,
         name: p.name,
         pcsBox: p.pcsBox,
+        imageUrl: p.imageUrl || null,
         isActive: p.isActive,
         skus,
       };
@@ -301,7 +355,7 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Respon
 // POST /api/products - Create Product & SKU rates (Manager only)
 router.post('/', authenticateToken, requireRole([Role.MANAGER, Role.ADMIN]), async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { code, name, pcsBox, rates } = req.body; // rates: [{ seriesId, colorId, price }]
+    const { code, name, pcsBox, imageUrl, rates } = req.body; // rates: [{ seriesId, colorId, price }]
 
     const trimmedCode = (code || '').trim();
     const trimmedName = (name || '').trim();
@@ -315,6 +369,7 @@ router.post('/', authenticateToken, requireRole([Role.MANAGER, Role.ADMIN]), asy
         code: trimmedCode,
         name: trimmedName,
         pcsBox: parseInt(pcsBox || '10', 10),
+        imageUrl: imageUrl ? imageUrl.trim() : null,
       },
     });
 
@@ -365,7 +420,7 @@ router.post('/', authenticateToken, requireRole([Role.MANAGER, Role.ADMIN]), asy
 router.put('/:id', authenticateToken, requireRole([Role.MANAGER, Role.ADMIN]), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { code, name, pcsBox, rates, isActive } = req.body;
+    const { code, name, pcsBox, imageUrl, rates, isActive } = req.body;
 
     const itemType = await prisma.itemType.update({
       where: { id },
@@ -373,6 +428,7 @@ router.put('/:id', authenticateToken, requireRole([Role.MANAGER, Role.ADMIN]), a
         code: code !== undefined ? code.trim() : undefined,
         name: name !== undefined ? name.trim() : undefined,
         pcsBox: pcsBox !== undefined ? parseInt(pcsBox, 10) : undefined,
+        imageUrl: imageUrl !== undefined ? (imageUrl ? imageUrl.trim() : null) : undefined,
         isActive: isActive !== undefined ? Boolean(isActive) : undefined,
       },
     });

@@ -56,9 +56,11 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Respon
       });
 
       return {
+        id: item.id,
         code: item.code,
         name: item.name,
         pcsBox: item.pcsBox,
+        imageUrl: item.imageUrl || null,
         prices,
         colorsBySeries,
         skus: item.skus.map((s) => ({

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SeriesItem } from '../../types';
-import { apiClient } from '../../api/client';
+import { apiClient, getApiBaseUrl } from '../../api/client';
 import { fmt } from '../../utils/formatters';
 
 export const Catalog: React.FC = () => {
@@ -168,6 +168,34 @@ export const Catalog: React.FC = () => {
 
                 return (
                   <div key={item.code} className="catCard">
+                    {/* Product Thumbnail Container */}
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '140px',
+                        borderRadius: '8px',
+                        background: '#F8FAFC',
+                        border: '1px solid var(--line)',
+                        marginBottom: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl.startsWith('http') ? item.imageUrl : `${getApiBaseUrl()}${item.imageUrl.startsWith('/') ? '' : '/'}${item.imageUrl}`}
+                          alt={item.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }}
+                        />
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', opacity: 0.4 }}>
+                          <span style={{ fontSize: '32px' }}>🔌</span>
+                          <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--navy)', letterSpacing: '0.5px' }}>MESCO</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="code">
                       CODE {item.code} · {item.pcsBox || 10}/box
                     </div>
