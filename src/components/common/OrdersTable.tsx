@@ -232,7 +232,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ orders, viewer, onModi
                             style={{ cursor: 'pointer', color: 'var(--blue)', fontWeight: 600 }}
                             onClick={() => toggleExpand(o.id)}
                           >
-                            {o.items.length} item{o.items.length > 1 ? 's' : ''} · {totalBoxes} box {isExpanded ? '▲' : '▼'}
+                            {o.items.length} item{o.items.length > 1 ? 's' : ''} · {totalBoxes} pcs {isExpanded ? '▲' : '▼'}
                           </span>
                         </td>
                         {viewer !== 'store' && <td style={{ fontWeight: 700 }}>{fmt(t.total)}</td>}
@@ -343,7 +343,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ orders, viewer, onModi
                                           <th>Code</th>
                                           <th>Item Name</th>
                                           <th>Color</th>
-                                          <th style={{ textAlign: 'right' }}>Qty (Boxes)</th>
+                                          <th style={{ textAlign: 'right' }}>Qty (Pcs)</th>
                                           {viewer !== 'store' && <th style={{ textAlign: 'right' }}>Base Rate</th>}
                                           {viewer !== 'store' && <th style={{ textAlign: 'right' }}>Disc. Price</th>}
                                           {viewer !== 'store' && <th style={{ textAlign: 'right' }}>Line Total</th>}
@@ -443,7 +443,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ orders, viewer, onModi
                       }}
                       onClick={() => toggleExpand(o.id)}
                     >
-                      <span>📦 {o.items.length} item{o.items.length > 1 ? 's' : ''} · {totalBoxes} box</span>
+                      <span>📦 {o.items.length} item{o.items.length > 1 ? 's' : ''} · {totalBoxes} pcs</span>
                       <span>{isExpanded ? '▲ Hide' : '▼ Breakdown'}</span>
                     </button>
                   </div>
@@ -461,7 +461,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ orders, viewer, onModi
                           </div>
                           {sItems.map((item, idx) => (
                             <div key={item.code ? `${item.code}-${item.color}` : idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px dashed var(--line)' }}>
-                              <span>{item.name} ({item.color}) × {item.qty} box</span>
+                              <span>{item.name} ({item.color}) × {item.qty} pcs</span>
                               {viewer !== 'store' && <b>{fmt(item.price * item.qty)}</b>}
                             </div>
                           ))}

@@ -245,7 +245,49 @@ Next: Final system verification and deployment readiness.
 - Confirmed product image uploads resolve with valid Bearer token authorization and display on Products management page and Customer Catalog.
 - Verified clean build (`tsc --noEmit` and `vite build`).
 
+
+## 2026-08-04 (Color-Enforced 3-Step Catalog Drill-Down & Order Flow)
+- Restructured Customer [Catalog.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/customer/Catalog.tsx) into a guided 3-step drill-down (Step 1 Series → Step 2 Color → Step 3 Scoped Product Grid) with breadcrumb navigation and color-scoped prices.
+- Updated [CartDrawer.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/customer/CartDrawer.tsx) and [printInvoice.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/utils/printInvoice.ts) to display Color alongside Series on cart line items and printed invoices.
+- Verified end-to-end order placement, manager review, store dispatch, packing slip, PDF invoice, and color-specific SKU stock deduction.
+
+
+## 2026-08-04 (Unauthenticated 401 Login Screen Error Fix)
+- Gated `refreshData()` in [AppContext.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/context/AppContext.tsx) and [Catalog.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/customer/Catalog.tsx) behind authentication token checks (`localStorage.getItem('token')`), preventing API requests on initial load before login.
+- Updated `request()` in [client.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/api/client.ts) to handle 401 responses cleanly by clearing stale tokens and suppressing noisy console errors and error toasts.
+- Confirmed zero 401 console errors on login screen load, and single data refresh upon user login.
+
+
+## 2026-08-04 (Color-Enforced Stock Management & Store Add-Stock Flow)
+- Updated Store role add-stock flow in [StockPage.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/common/StockPage.tsx) to a 3-step drill-down (Series → Color → Add Quantities) with breadcrumb navigation and review modal, maintaining 0-view security rules.
+- Updated Manager role inventory management in [StockPage.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/common/StockPage.tsx) to a 3-step drill-down & color matrix (Series → Color → SKU Stock Table) with per-SKU stock and minimum level editing.
+- Verified end-to-end: Store stock addition (+30) and Order dispatch deduction (-10) for exact color-specific SKU (`USB Charger` Vector - White).
+
+
+## 2026-08-04 (MESCO Catalog Wipe & Reseed — Effective 15-01-2026)
+- Wiped old catalog data and reseeded [seed.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/prisma/seed.ts) with 7 Series (`Prime`, `Grace White`, `Waves`, `Cubic`, `Vector`, `Grace`, `Ambit`), 36 ItemTypes (`01`–`48`), `White` & `Black` colors for all series, and 496 SKUs with 15-01-2026 rate list pricing.
+- Retained all `Customer`, `User`, `Order`, `OrderItem`, `Payment`, and invoice history.
+- Confirmed omission of unpriced items per series and verified 0-error build across frontend and backend.
+
+
+## 2026-08-04 (Login Page Redesign & WhatsApp Invoice PDF Logo Branding)
+- Redesigned login screen in [Login.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/auth/Login.tsx) and [index.css](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/index.css): removed side info panel, centered form, and placed white MESCO logo (`logo.png`) as visual anchor over deep navy radial background.
+- Added MESCO logo to customer WhatsApp invoice PDF header in [pdfInvoiceService.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/src/services/pdfInvoiceService.ts).
+- Kept logo off Store's printed packing slip ([printInvoice.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/utils/printInvoice.ts)), and confirmed 0-error build across frontend and backend.
+
+
+## 2026-08-04 (Invoice PDF Layout, Company Header & App-Wide "Pieces" Terminology Fix)
+- Fixed right-side text alignment and margins in [pdfInvoiceService.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/src/services/pdfInvoiceService.ts), ensuring 14px internal padding inside top navy banner.
+- Updated company header across WhatsApp PDF invoice and printable invoice ([printInvoice.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/utils/printInvoice.ts)) with Mughal Electrical And Screw Company, Sargodha address, and phone: (048) 3716807.
+- Systematically replaced all user-facing quantity unit labels from `box/ctn` to `pcs` across Catalog, Cart, Order Review, Orders Tables, Stock Page, Packing Slips, and PDF Invoices.
+
 Next: Await further feature directives or user feedback.
+
+
+
+
+
+
 
 
 

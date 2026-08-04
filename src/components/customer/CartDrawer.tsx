@@ -63,7 +63,7 @@ export const CartDrawer: React.FC = () => {
                 <div>
                   <div className="nm">{item.name}</div>
                   <div className="meta">
-                    {SERIES_LABEL[item.series] || item.series} · {item.qty} box × {fmt(item.price)}
+                    {SERIES_LABEL[item.series] || item.series} ({item.color || 'Standard'}) · {item.qty} pcs × {fmt(item.price)}
                   </div>
                 </div>
                 <button className="rm" onClick={() => removeFromCart(key)}>

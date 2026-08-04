@@ -110,9 +110,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => { setStored('user', user); }, [user]);
 
   useEffect(() => {
-    refreshData();
     const token = localStorage.getItem('token');
     if (user && token) {
+      refreshData();
       if (user.role === 'admin') fetchUsersList();
     } else if (user && !token) {
       logout();
@@ -164,24 +164,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const refreshData = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
     try {
       const [catData, custData, ordData, payData] = await Promise.all([
-        apiClient.catalog.getCatalog().catch((err) => {
-          console.error('[refreshData] Catalog fetch failed:', err);
-          return null;
-        }),
-        apiClient.customers.getCustomers().catch((err) => {
-          console.error('[refreshData] Customers fetch failed:', err);
-          return null;
-        }),
-        apiClient.orders.getOrders().catch((err) => {
-          console.error('[refreshData] Orders fetch failed:', err);
-          return null;
-        }),
-        apiClient.payments.getPayments().catch((err) => {
-          console.error('[refreshData] Payments fetch failed:', err);
-          return null;
-        }),
+        apiClient.catalog.getCatalog().catch(() => null),
+        apiClient.customers.getCustomers().catch(() => null),
+        apiClient.orders.getOrders().catch(() => null),
+        apiClient.payments.getPayments().catch(() => null),
       ]);
 
       if (catData) setCatalog(catData);
@@ -189,8 +180,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (ordData) setOrders(ordData);
       if (payData) setPayments(payData);
     } catch (e: any) {
-      console.error('[refreshData] System error during refresh:', e);
-      addToast(`API Error: ${e.message || 'Failed to sync with server'}`, 'bad');
+      console.warn('[refreshData] Sync error:', e);
     }
   };
 

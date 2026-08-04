@@ -79,6 +79,13 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        setAuthToken(null);
+        const authErr = new Error('Authentication token required');
+        (authErr as any).isAuthError = true;
+        throw authErr;
+      }
+
       const errorBody = await response.json().catch(() => ({ message: `HTTP Error ${response.status}: ${response.statusText}` }));
       const msg = errorBody.message || `HTTP ${response.status} on ${endpoint}`;
       console.error(`[API HTTP Error ${response.status}] Endpoint: ${endpoint} | URL: ${fullUrl} | Details:`, errorBody);
@@ -87,6 +94,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
     return await response.json();
   } catch (err: any) {
+    if (err.isAuthError || err.message?.includes('Authentication token required')) {
+      throw err;
+    }
+
     const isTypeError = err.name === 'TypeError' || err.message?.includes('fetch') || err.message?.includes('Failed to fetch');
     const userMessage = isTypeError
       ? `Network Error: Unable to connect to backend server at ${baseUrl}. Ensure backend is running and reachable on LAN.`

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { SeriesItem, StockItem, ProductItem } from '../../types';
+import { SeriesItem, StockItem, ProductItem, ColorItem } from '../../types';
 import { apiClient } from '../../api/client';
 
 export const StockPage: React.FC = () => {
@@ -14,15 +14,18 @@ export const StockPage: React.FC = () => {
   const [productsList, setProductsList] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Store Add-Only Quantity Entry Table state
+  // Store Role Drill-Down state
+  const [storeStep, setStoreStep] = useState<'series' | 'color' | 'items'>('series');
+  const [selectedStoreColor, setSelectedStoreColor] = useState<ColorItem | null>(null);
   const [storeQtyInputs, setStoreQtyInputs] = useState<Record<string, string>>({});
   const [storeSearch, setStoreSearch] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [submittingStoreCommit, setSubmittingStoreCommit] = useState(false);
 
-  // Filters inside selected series view (Manager only)
+  // Manager Role Drill-Down state
+  const [managerStep, setManagerStep] = useState<'series' | 'color' | 'items'>('series');
+  const [selectedManagerColor, setSelectedManagerColor] = useState<string | null>('all');
   const [search, setSearch] = useState('');
-  const [colorFilter, setColorFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
   // Manager Modals state
@@ -67,7 +70,8 @@ export const StockPage: React.FC = () => {
   }, [user?.role]);
 
   // -------------------------------------------------------------
-  // STORE ROLE VIEW: DRILL-DOWN ADD-ONLY STOCK FLOW (VIEW NONE)
+  // STORE ROLE VIEW: 3-STEP DRILL-DOWN ADD-ONLY STOCK FLOW
+  // Step 1: Select Series -> Step 2: Select Color -> Step 3: Add Quantities
   // -------------------------------------------------------------
   if (isStore) {
     const activeSeriesList = seriesList.filter((s) => s.isActive);
@@ -89,14 +93,46 @@ export const StockPage: React.FC = () => {
       );
     }
 
+    const handleSelectStoreSeries = (ser: SeriesItem) => {
+      setSelectedSeries(ser);
+      const activeColors = Array.isArray(ser.colors) ? ser.colors.filter((c) => c && c.isActive) : [];
+      if (activeColors.length === 1) {
+        setSelectedStoreColor(activeColors[0]);
+        setStoreStep('items');
+      } else {
+        setSelectedStoreColor(null);
+        setStoreStep('color');
+      }
+      setStoreQtyInputs({});
+      setStoreSearch('');
+    };
+
+    const handleSelectStoreColor = (col: ColorItem) => {
+      setSelectedStoreColor(col);
+      setStoreStep('items');
+    };
+
+    const handleStoreBackToSeries = () => {
+      setSelectedSeries(null);
+      setSelectedStoreColor(null);
+      setStoreStep('series');
+      setStoreQtyInputs({});
+      setStoreSearch('');
+    };
+
+    const handleStoreBackToColor = () => {
+      setSelectedStoreColor(null);
+      setStoreStep('color');
+    };
+
     // STEP 1: STORE SERIES LIST CARDS GRID
-    if (!selectedSeries) {
+    if (storeStep === 'series' || !selectedSeries) {
       return (
         <div className="page">
           <div className="pageHead">
             <div>
               <h1>Stock &amp; Inventory Entry</h1>
-              <p className="sub">Select a product series to log incoming stock arrivals.</p>
+              <p className="sub">Step 1 of 3: Select a product series to log incoming stock arrivals.</p>
             </div>
           </div>
 
@@ -109,7 +145,6 @@ export const StockPage: React.FC = () => {
             }}
           >
             {activeSeriesList.map((ser) => {
-              // Count available active SKUs for this series
               let skuCount = 0;
               productsList.forEach((p) => {
                 if (!p.isActive) return;
@@ -120,6 +155,8 @@ export const StockPage: React.FC = () => {
                 });
               });
 
+              const activeColors = Array.isArray(ser.colors) ? ser.colors.filter((c) => c && c.isActive) : [];
+
               return (
                 <div
                   key={ser.id}
@@ -129,26 +166,30 @@ export const StockPage: React.FC = () => {
                     transition: 'transform 0.15s ease, border-color 0.15s ease',
                     padding: '20px',
                     border: '1.5px solid var(--line)',
+                    borderRadius: '12px',
                   }}
-                  onClick={() => {
-                    setSelectedSeries(ser);
-                    setStoreQtyInputs({});
-                    setStoreSearch('');
-                  }}
+                  onClick={() => handleSelectStoreSeries(ser)}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <h3 style={{ margin: 0, color: 'var(--navy)', fontSize: '18px' }}>{ser.name} Series</h3>
                     <span className="badge b-blue" style={{ fontSize: '12px' }}>
-                      {skuCount} Items
+                      {skuCount} SKUs
                     </span>
                   </div>
 
                   <p className="sub" style={{ margin: 0, fontSize: '13px' }}>
-                    Add inventory for {ser.name} products &amp; colors.
+                    Available in {activeColors.length} color{activeColors.length !== 1 ? 's' : ''}:
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' }}>
+                      {activeColors.map((c) => (
+                        <span key={c.id} className="badge" style={{ fontSize: '11px', background: '#F1F5F9' }}>
+                          {c.name}
+                        </span>
+                      ))}
+                    </div>
                   </p>
 
                   <div style={{ marginTop: '16px', textAlign: 'right' }}>
-                    <button className="btn b-primary small">View Items →</button>
+                    <button type="button" className="btn b-primary small">Select {ser.name} →</button>
                   </div>
                 </div>
               );
@@ -158,7 +199,66 @@ export const StockPage: React.FC = () => {
       );
     }
 
-    // STEP 2: STORE QUANTITY ENTRY TABLE FOR SELECTED SERIES
+    // STEP 2: STORE COLOR SELECTION FOR SELECTED SERIES
+    if (storeStep === 'color' && selectedSeries) {
+      const activeColors = Array.isArray(selectedSeries.colors) ? selectedSeries.colors.filter((c) => c && c.isActive) : [];
+
+      return (
+        <div className="page">
+          <div className="pageHead">
+            <div>
+              <button type="button" className="btn b-ghost small" style={{ marginBottom: '8px' }} onClick={handleStoreBackToSeries}>
+                ← Back to Series
+              </button>
+              <h1>{selectedSeries.name} Series — Select Color</h1>
+              <p className="sub">Step 2 of 3: Select incoming color variant for {selectedSeries.name} Series.</p>
+            </div>
+          </div>
+
+          {!activeColors.length ? (
+            <div className="empty" style={{ padding: '40px 20px' }}>
+              <div className="ic">🎨</div>
+              <b>No active colors</b>
+              No active color options found for {selectedSeries.name} Series.
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                gap: '16px',
+                marginTop: '8px',
+              }}
+            >
+              {activeColors.map((col) => (
+                <div
+                  key={col.id}
+                  className="card"
+                  style={{
+                    cursor: 'pointer',
+                    padding: '20px',
+                    border: '1.5px solid var(--line)',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                  }}
+                  onClick={() => handleSelectStoreColor(col)}
+                >
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>📦</div>
+                  <div style={{ fontSize: '17px', fontWeight: 800, color: 'var(--navy)', marginBottom: '8px' }}>
+                    {col.name}
+                  </div>
+                  <button type="button" className="btn b-primary small" style={{ width: '100%', justifyContent: 'center' }}>
+                    Add {col.name} Stock →
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // STEP 3: STORE QUANTITY ENTRY TABLE FOR SELECTED SERIES + COLOR
     const availableSkusForStore: {
       skuId: string;
       code: string;
@@ -170,7 +270,13 @@ export const StockPage: React.FC = () => {
     productsList.forEach((prod) => {
       if (!prod.isActive) return;
       prod.skus.forEach((sku) => {
-        if (sku.isActive && sku.seriesId === selectedSeries.id && sku.currentPrice !== null) {
+        if (
+          sku.isActive &&
+          sku.seriesId === selectedSeries.id &&
+          selectedStoreColor &&
+          sku.colorId === selectedStoreColor.id &&
+          sku.currentPrice !== null
+        ) {
           availableSkusForStore.push({
             skuId: sku.id,
             code: prod.code,
@@ -230,30 +336,33 @@ export const StockPage: React.FC = () => {
       <div className="page">
         <div className="pageHead">
           <div>
-            <button
-              className="btn b-ghost small"
-              style={{ marginBottom: '8px' }}
-              onClick={() => {
-                setSelectedSeries(null);
-                setStoreQtyInputs({});
-                setStoreSearch('');
-              }}
-            >
-              ← Back to All Series
-            </button>
-            <h1>{selectedSeries.name} Series — Add Stock</h1>
-            <p className="sub">Enter incoming quantities (boxes) for {selectedSeries.name} items.</p>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <button type="button" className="btn b-ghost small" onClick={handleStoreBackToColor}>
+                ← Change Color
+              </button>
+              <button type="button" className="btn b-ghost small" onClick={handleStoreBackToSeries}>
+                ← Change Series
+              </button>
+            </div>
+            <h1>
+              {selectedSeries.name} Series ({selectedStoreColor?.name}) — Add Stock
+            </h1>
+            <p className="sub">
+              Step 3 of 3: Enter incoming quantities (pcs) for {selectedSeries.name} — {selectedStoreColor?.name}.
+            </p>
           </div>
         </div>
 
         <div className="card">
           <div className="cardHead">
-            <h3>{selectedSeries.name} Items ({filteredStoreItems.length})</h3>
+            <h3>
+              {selectedSeries.name} Items — {selectedStoreColor?.name} ({filteredStoreItems.length})
+            </h3>
             <div className="cardFilterRow">
               <input
                 type="text"
                 className="cardFilterInput"
-                placeholder="Search item code, name, color..."
+                placeholder="Search item code or name..."
                 value={storeSearch}
                 onChange={(e) => setStoreSearch(e.target.value)}
               />
@@ -268,7 +377,7 @@ export const StockPage: React.FC = () => {
           {!filteredStoreItems.length ? (
             <div className="empty">
               <div className="ic">📦</div>
-              <b>No items match search</b>
+              <b>No items match search for {selectedSeries.name} ({selectedStoreColor?.name})</b>
             </div>
           ) : (
             <>
@@ -281,7 +390,7 @@ export const StockPage: React.FC = () => {
                       <th>Item Code &amp; Name</th>
                       <th>Color</th>
                       <th>Pcs/Box</th>
-                      <th style={{ textAlign: 'right', width: '220px' }}>Quantity to Add (Boxes)</th>
+                      <th style={{ textAlign: 'right', width: '220px' }}>Quantity to Add (Pcs)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -341,7 +450,7 @@ export const StockPage: React.FC = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: '12.5px', color: 'var(--ink-dim)' }}>Pcs/Box: <b>{item.pcsBox}</b></span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--navy)' }}>Add Boxes:</span>
+                          <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--navy)' }}>Add Pcs:</span>
                           <input
                             type="number"
                             min="0"
@@ -373,7 +482,7 @@ export const StockPage: React.FC = () => {
                   onClick={handleReviewClick}
                   disabled={!confirmEntries.length}
                 >
-                  Review &amp; Submit Additions ({confirmEntries.reduce((s, c) => s + c.qty, 0)} boxes)
+                  Review &amp; Submit Additions ({confirmEntries.reduce((s, c) => s + c.qty, 0)} pcs)
                 </button>
               </div>
             </>
@@ -397,7 +506,7 @@ export const StockPage: React.FC = () => {
 
               <div className="modalBody" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
                 <p className="sub" style={{ marginTop: 0, marginBottom: '16px' }}>
-                  Please review the stock quantities to be added for <b>{selectedSeries.name} Series</b>:
+                  Please review stock additions for <b>{selectedSeries.name} Series ({selectedStoreColor?.name})</b>:
                 </p>
 
                 <table className="tbl" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
@@ -420,7 +529,7 @@ export const StockPage: React.FC = () => {
                           <span className="badge b-blue">{e.colorName}</span>
                         </td>
                         <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 800, fontSize: '14px', color: 'var(--good)' }}>
-                          +{e.qty} box(es)
+                          +{e.qty} pcs
                         </td>
                       </tr>
                     ))}
@@ -431,7 +540,7 @@ export const StockPage: React.FC = () => {
                         Total Additions:
                       </td>
                       <td style={{ padding: '10px 8px', textAlign: 'right' }}>
-                        +{confirmEntries.reduce((s, c) => s + c.qty, 0)} box(es)
+                        +{confirmEntries.reduce((s, c) => s + c.qty, 0)} pcs
                       </td>
                     </tr>
                   </tfoot>
@@ -465,36 +574,32 @@ export const StockPage: React.FC = () => {
 
   // -------------------------------------------------------------
   // MANAGER ROLE VIEW: FULL INVENTORY DRILL-DOWN & MANAGEMENT
+  // Step 1: Series List -> Step 2: Color List -> Step 3: Stock Table per SKU
   // -------------------------------------------------------------
-  const currentSeriesStock = selectedSeries
-    ? stockItems.filter((s) => s.seriesId === selectedSeries.id)
-    : [];
-
-  const filteredStock = currentSeriesStock.filter((s) => {
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      const matchCode = s.code.toLowerCase().includes(q);
-      const matchName = s.name.toLowerCase().includes(q);
-      const matchColor = s.colorName.toLowerCase().includes(q);
-      if (!matchCode && !matchName && !matchColor) return false;
-    }
-
-    if (colorFilter !== 'all' && s.colorName.toLowerCase() !== colorFilter.toLowerCase()) {
-      return false;
-    }
-
-    if (statusFilter === 'low' && !s.isLowStock) return false;
-    if (statusFilter === 'normal' && s.isLowStock) return false;
-
-    return true;
-  });
-
-  const hasActiveFilters = search !== '' || colorFilter !== 'all' || statusFilter !== 'all';
-
-  const resetFilters = () => {
+  const handleSelectManagerSeries = (ser: SeriesItem) => {
+    setSelectedSeries(ser);
+    setSelectedManagerColor('all');
+    setManagerStep('color');
     setSearch('');
-    setColorFilter('all');
     setStatusFilter('all');
+  };
+
+  const handleSelectManagerColor = (colName: string) => {
+    setSelectedManagerColor(colName);
+    setManagerStep('items');
+  };
+
+  const handleManagerBackToSeries = () => {
+    setSelectedSeries(null);
+    setSelectedManagerColor('all');
+    setManagerStep('series');
+    setSearch('');
+    setStatusFilter('all');
+  };
+
+  const handleManagerBackToColor = () => {
+    setSelectedManagerColor('all');
+    setManagerStep('color');
   };
 
   const handleAddStockSubmit = async (e: React.FormEvent) => {
@@ -509,7 +614,7 @@ export const StockPage: React.FC = () => {
     setSubmittingStock(true);
     try {
       await apiClient.stock.addReceipt(addStockItem.id, qty, addNote);
-      addToast(`Added ${qty} box(es) to ${addStockItem.name} (${addStockItem.colorName})`, 'good');
+      addToast(`Added ${qty} pcs to ${addStockItem.name} (${addStockItem.colorName})`, 'good');
       setAddStockItem(null);
       setAddQty('');
       setAddNote('');
@@ -562,13 +667,13 @@ export const StockPage: React.FC = () => {
   }
 
   // STEP 1: MANAGER SERIES SELECTION GRID VIEW
-  if (!selectedSeries) {
+  if (managerStep === 'series' || !selectedSeries) {
     return (
       <div className="page">
         <div className="pageHead">
           <div>
             <h1>Stock &amp; Inventory Management</h1>
-            <p className="sub">Select a series to view and manage inventory levels.</p>
+            <p className="sub">Step 1 of 3: Select a product series to view and manage inventory levels.</p>
           </div>
         </div>
 
@@ -594,8 +699,9 @@ export const StockPage: React.FC = () => {
                   transition: 'transform 0.15s ease, border-color 0.15s ease',
                   padding: '20px',
                   border: '1.5px solid var(--line)',
+                  borderRadius: '12px',
                 }}
-                onClick={() => setSelectedSeries(ser)}
+                onClick={() => handleSelectManagerSeries(ser)}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                   <h3 style={{ margin: 0, color: 'var(--navy)', fontSize: '18px' }}>{ser.name} Series</h3>
@@ -615,7 +721,7 @@ export const StockPage: React.FC = () => {
                     <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--navy)', display: 'block' }}>
                       {totalStock}
                     </span>
-                    Total Stock (Boxes)
+                    Total Stock (Pcs)
                   </div>
                   <div>
                     <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--navy)', display: 'block' }}>
@@ -626,7 +732,7 @@ export const StockPage: React.FC = () => {
                 </div>
 
                 <div style={{ marginTop: '16px', textAlign: 'right' }}>
-                  <button className="btn b-ghost small">View Stock →</button>
+                  <button type="button" className="btn b-ghost small">Select {ser.name} →</button>
                 </div>
               </div>
             );
@@ -636,44 +742,154 @@ export const StockPage: React.FC = () => {
     );
   }
 
-  // STEP 2: MANAGER SELECTED SERIES DRILL-DOWN STOCK VIEW
+  // STEP 2: MANAGER COLOR SELECTION VIEW FOR SELECTED SERIES
   const availableColors = selectedSeries.colors || [];
+
+  if (managerStep === 'color' && selectedSeries) {
+    return (
+      <div className="page">
+        <div className="pageHead">
+          <div>
+            <button type="button" className="btn b-ghost small" style={{ marginBottom: '8px' }} onClick={handleManagerBackToSeries}>
+              ← Back to Series
+            </button>
+            <h1>{selectedSeries.name} Series — Select Color View</h1>
+            <p className="sub">Step 2 of 3: Choose a specific color or view all colors for {selectedSeries.name} Series.</p>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: '16px',
+            marginTop: '8px',
+          }}
+        >
+          {/* Card to View All Colors */}
+          <div
+            className="card"
+            style={{
+              cursor: 'pointer',
+              padding: '20px',
+              border: '2px solid var(--navy)',
+              borderRadius: '12px',
+              textAlign: 'center',
+              background: '#FAFBFD',
+            }}
+            onClick={() => handleSelectManagerColor('all')}
+          >
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎨</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, color: 'var(--navy)', marginBottom: '8px' }}>
+              All Colors
+            </div>
+            <p className="sub" style={{ fontSize: '12.5px', margin: '0 0 12px 0' }}>
+              View full inventory matrix across all colors in {selectedSeries.name}.
+            </p>
+            <button type="button" className="btn b-primary small" style={{ width: '100%', justifyContent: 'center' }}>
+              View All Colors →
+            </button>
+          </div>
+
+          {availableColors.map((col) => {
+            const colSkus = stockItems.filter(
+              (s) => s.seriesId === selectedSeries.id && s.colorName.toLowerCase() === col.name.toLowerCase()
+            );
+            const colStock = colSkus.reduce((sum, s) => sum + s.stockQty, 0);
+            const colLow = colSkus.filter((s) => s.isLowStock).length;
+
+            return (
+              <div
+                key={col.id}
+                className="card"
+                style={{
+                  cursor: 'pointer',
+                  padding: '20px',
+                  border: '1.5px solid var(--line)',
+                  borderRadius: '12px',
+                }}
+                onClick={() => handleSelectManagerColor(col.name)}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '17px', fontWeight: 800, color: 'var(--navy)' }}>{col.name}</div>
+                  {colLow > 0 && <span className="badge b-bad" style={{ fontSize: '11px' }}>{colLow} Low</span>}
+                </div>
+
+                <div style={{ fontSize: '13px', color: 'var(--ink-dim)', marginBottom: '12px' }}>
+                  Total Stock: <b style={{ color: 'var(--navy)' }}>{colStock} pcs</b>
+                </div>
+
+                <button type="button" className="btn b-ghost small" style={{ width: '100%', justifyContent: 'center' }}>
+                  View {col.name} Stock →
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // STEP 3: MANAGER SELECTED SERIES + COLOR DRILL-DOWN STOCK TABLE
+  const currentSeriesStock = stockItems.filter((s) => s.seriesId === selectedSeries.id);
+
+  const filteredStock = currentSeriesStock.filter((s) => {
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const matchCode = s.code.toLowerCase().includes(q);
+      const matchName = s.name.toLowerCase().includes(q);
+      const matchColor = s.colorName.toLowerCase().includes(q);
+      if (!matchCode && !matchName && !matchColor) return false;
+    }
+
+    if (
+      selectedManagerColor &&
+      selectedManagerColor !== 'all' &&
+      s.colorName.toLowerCase() !== selectedManagerColor.toLowerCase()
+    ) {
+      return false;
+    }
+
+    if (statusFilter === 'low' && !s.isLowStock) return false;
+    if (statusFilter === 'normal' && s.isLowStock) return false;
+
+    return true;
+  });
+
+  const hasActiveFilters = search !== '' || statusFilter !== 'all';
+
+  const resetFilters = () => {
+    setSearch('');
+    setStatusFilter('all');
+  };
 
   return (
     <div className="page">
       <div className="pageHead">
         <div>
-          <button
-            className="btn b-ghost small"
-            style={{ marginBottom: '8px' }}
-            onClick={() => {
-              setSelectedSeries(null);
-              resetFilters();
-            }}
-          >
-            ← Back to All Series
-          </button>
-          <h1>{selectedSeries.name} Series — Stock Inventory</h1>
-          <p className="sub">View and update stock counts for {selectedSeries.name} items.</p>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+            <button type="button" className="btn b-ghost small" onClick={handleManagerBackToColor}>
+              ← Change Color View
+            </button>
+            <button type="button" className="btn b-ghost small" onClick={handleManagerBackToSeries}>
+              ← Change Series
+            </button>
+          </div>
+          <h1>
+            {selectedSeries.name} Series — {selectedManagerColor === 'all' ? 'All Colors' : `${selectedManagerColor} Color`} Stock
+          </h1>
+          <p className="sub">
+            Step 3 of 3: Manage per-SKU stock levels and minimum alert thresholds for {selectedSeries.name}.
+          </p>
         </div>
-      </div>
-
-      {/* Available Colors Tags */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
-        <span style={{ fontSize: '13px', color: 'var(--ink-dim)', alignSelf: 'center', fontWeight: 600 }}>
-          Available Colors:
-        </span>
-        {availableColors.map((col) => (
-          <span key={col.id} className="badge b-blue" style={{ fontSize: '12px' }}>
-            {col.name}
-          </span>
-        ))}
       </div>
 
       {/* Main Stock Table Card */}
       <div className="card">
         <div className="cardHead">
-          <h3>Product Stock ({filteredStock.length} SKUs)</h3>
+          <h3>
+            Product Stock ({filteredStock.length} SKUs) — {selectedSeries.name} ({selectedManagerColor === 'all' ? 'All Colors' : selectedManagerColor})
+          </h3>
           <div className="cardFilterRow">
             <input
               type="text"
@@ -685,8 +901,8 @@ export const StockPage: React.FC = () => {
 
             <select
               className="cardFilterSelect"
-              value={colorFilter}
-              onChange={(e) => setColorFilter(e.target.value)}
+              value={selectedManagerColor || 'all'}
+              onChange={(e) => setSelectedManagerColor(e.target.value)}
             >
               <option value="all">All Colors</option>
               {availableColors.map((c) => (
@@ -730,7 +946,7 @@ export const StockPage: React.FC = () => {
                     <th>Item Code &amp; Name</th>
                     <th>Color</th>
                     <th>Pcs/Box</th>
-                    <th style={{ textAlign: 'right' }}>Current Stock (Boxes)</th>
+                    <th style={{ textAlign: 'right' }}>Current Stock (Pcs)</th>
                     <th style={{ textAlign: 'right' }}>Min Stock Level</th>
                     <th style={{ textAlign: 'center' }}>Status</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
@@ -793,7 +1009,6 @@ export const StockPage: React.FC = () => {
             <div className="mCardList">
               {filteredStock.map((s) => (
                 <div key={s.id} className="mCard">
-                  {/* Top Row: Item Code/Name & Low Stock Status */}
                   <div className="mCardHeader">
                     <div>
                       <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--navy)' }}>
@@ -808,22 +1023,20 @@ export const StockPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Stock Qty & Color Pill */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span className="badge b-blue">{s.colorName}</span>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: '16.5px', fontWeight: 800, color: s.isLowStock ? 'var(--bad)' : 'var(--navy)' }}>
-                        {s.stockQty} box(es)
+                        {s.stockQty} pcs
                       </div>
                       <div style={{ fontSize: '11px', color: 'var(--ink-dim)' }}>
-                        Min Threshold: {s.minStockLevel} box(es)
+                        Min Threshold: {s.minStockLevel} pcs
                       </div>
                     </div>
                   </div>
 
                   <div className="mCardDivider"></div>
 
-                  {/* Actions Row */}
                   <div className="mCardFooter">
                     <span style={{ fontSize: '12px', color: 'var(--ink-dim)' }}>Pcs/Box: <b>{s.pcsBox}</b></span>
                     <div className="btnRow" style={{ gap: '6px', width: 'auto' }}>
@@ -870,11 +1083,11 @@ export const StockPage: React.FC = () => {
                 <div style={{ background: 'var(--bg-subtle)', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>
                   Series: <b>{addStockItem.seriesName}</b> · Color: <b>{addStockItem.colorName}</b>
                   <br />
-                  Current Stock: <b>{addStockItem.stockQty} box(es)</b>
+                  Current Stock: <b>{addStockItem.stockQty} pcs</b>
                 </div>
 
                 <div className="fg">
-                  <label>Quantity to Add (Boxes) *</label>
+                  <label>Quantity to Add (Pcs) *</label>
                   <input
                     type="number"
                     min="1"
@@ -926,11 +1139,11 @@ export const StockPage: React.FC = () => {
                 <div style={{ background: 'var(--bg-subtle)', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px' }}>
                   Item: <b>{editMinItem.name}</b> ({editMinItem.seriesName} - {editMinItem.colorName})
                   <br />
-                  Current Stock: <b>{editMinItem.stockQty} box(es)</b>
+                  Current Stock: <b>{editMinItem.stockQty} pcs</b>
                 </div>
 
                 <div className="fg">
-                  <label>Minimum Stock Level Threshold (Boxes) *</label>
+                  <label>Minimum Stock Level Threshold (Pcs) *</label>
                   <input
                     type="number"
                     min="0"

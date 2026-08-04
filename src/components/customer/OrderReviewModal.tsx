@@ -153,7 +153,7 @@ export const OrderReviewModal: React.FC<OrderReviewModalProps> = ({
                         <td style={{ padding: '10px 12px', textAlign: 'right' }}>{fmt(item.price)}</td>
                         <td style={{ padding: '10px 12px', textAlign: 'center' }}>{sDiscount}%</td>
                         <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600 }}>{fmt(priceAfterDisc)}</td>
-                        <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700 }}>{item.qty} box</td>
+                        <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700 }}>{item.qty} pcs</td>
                         <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--navy)' }}>
                           {fmt(lineTotal)}
                         </td>

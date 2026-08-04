@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import logoImg from '../../assets/logo.png';
 
 export const Login: React.FC = () => {
   const { login } = useApp();
@@ -33,33 +34,15 @@ export const Login: React.FC = () => {
 
   return (
     <div id="loginScreen">
-      <div className="loginHero">
-        <div className="brandmark">
-          <span className="dot"></span> MESCO
+      {/* Floating Animated Radial Glow Backdrop */}
+      <div className="loginGlowBackground"></div>
+
+      <div className="loginContainer">
+        {/* Visual Anchor: MESCO White Logo */}
+        <div className="loginLogoWrapper">
+          <img src={logoImg} alt="MESCO Switches & Sockets" className="loginLogo" />
         </div>
-        <div className="heroCopy">
-          <h1>
-            Switches &amp; sockets,
-            <br />
-            ordered properly.
-          </h1>
-          <p>
-            One place to order, approve, dispatch, and bill — for customers, the office, store floor, and admin management.
-          </p>
-        </div>
-        <div className="heroFoot">
-          <div>
-            <b>3</b>series
-          </div>
-          <div>
-            <b>36</b>item types
-          </div>
-          <div>
-            <b>live</b>stock &amp; rates
-          </div>
-        </div>
-      </div>
-      <div className="loginPane">
+
         <div className="loginCard">
           <h2>Sign in</h2>
           <p className="sub">Enter your account credentials to continue.</p>
