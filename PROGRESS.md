@@ -281,7 +281,21 @@ Next: Final system verification and deployment readiness.
 - Updated company header across WhatsApp PDF invoice and printable invoice ([printInvoice.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/utils/printInvoice.ts)) with Mughal Electrical And Screw Company, Sargodha address, and phone: (048) 3716807.
 - Systematically replaced all user-facing quantity unit labels from `box/ctn` to `pcs` across Catalog, Cart, Order Review, Orders Tables, Stock Page, Packing Slips, and PDF Invoices.
 
+
+## 2026-08-04 (LogoBlack Integration on Print Templates & Packing Slips)
+- Integrated `LogoBlack.png` (black print logo) into [printInvoice.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/utils/printInvoice.ts) for Store's printed Packing Slip and Customer Printable Invoice, rendering with transparent background on white paper.
+- Added full company header block (`Mughal Electrical And Screw Company`, Sargodha address, phone: `(048) 3716807`) to Packing Slip while maintaining 0-pricing delivery format.
+- Confirmed 0-error build across frontend and backend.
+
+
+## 2026-08-04 (2x Logo Dimensions Scaling Across App & Templates)
+- Doubled logo height to 152px on Login page ([index.css](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/index.css)), expanding container width to 480px.
+- Doubled logo height to 104px in [printInvoice.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/utils/printInvoice.ts) for both printable invoices and Store packing slips, maintaining clean transparent background.
+- Doubled logo height to 72px in [pdfInvoiceService.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/src/services/pdfInvoiceService.ts), expanding top navy banner to 122px with proportional y-offsets.
+
 Next: Await further feature directives or user feedback.
+
+
 
 
 

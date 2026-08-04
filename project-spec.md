@@ -93,3 +93,7 @@ Both are needed, and both need their own report.
 ## 9. Reference
 
 Item catalog and pricing are based on the attached Mesco price list (dated 01-08-2022), covering 36 item types across Vector, Ambit, and Waves/Cubic series — including switches (1–10 gang, 1-way and 2-way), combination switch+socket units, plugs, TV/telephone sockets, bell push, spares, and dimmers.
+
+
+## github
+always push to github after every change in the files

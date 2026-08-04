@@ -44,26 +44,26 @@ export async function generateInvoicePdfBuffer(order: InvoiceOrderData): Promise
       const lineGray = '#E2E8F0';
       const bgSubtle = '#F8FAFC';
 
-      // 1. Header Banner (Height 85px with 14px internal right padding)
-      doc.rect(36, 36, 523, 85).fill(navy);
+      // 1. Header Banner (Height 122px to accommodate 2x logo height with 14px internal right padding)
+      doc.rect(36, 36, 523, 122).fill(navy);
 
       const logoPath = path.resolve(process.cwd(), 'assets', 'logo.png');
       if (fs.existsSync(logoPath)) {
-        doc.image(logoPath, 48, 42, { height: 36 });
-        doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#E2E8F0').text('Mughal Electrical And Screw Company', 48, 82);
-        doc.font('Helvetica').fontSize(7.5).fillColor('#94A3B8').text('Iqbal Colony, 29 Block Urban Area Sargodha, 40100  |  Phone: (048) 3716807', 48, 95);
+        doc.image(logoPath, 48, 42, { height: 72 });
+        doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#E2E8F0').text('Mughal Electrical And Screw Company', 48, 118);
+        doc.font('Helvetica').fontSize(7.5).fillColor('#94A3B8').text('Iqbal Colony, 29 Block Urban Area Sargodha, 40100  |  Phone: (048) 3716807', 48, 131);
       } else {
-        doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(20).text('MESCO', 48, 42);
-        doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#E2E8F0').text('Mughal Electrical And Screw Company', 48, 66);
-        doc.font('Helvetica').fontSize(7.5).fillColor('#94A3B8').text('Iqbal Colony, 29 Block Urban Area Sargodha, 40100  |  Phone: (048) 3716807', 48, 82);
+        doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(22).text('MESCO', 48, 42);
+        doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#E2E8F0').text('Mughal Electrical And Screw Company', 48, 70);
+        doc.font('Helvetica').fontSize(7.5).fillColor('#94A3B8').text('Iqbal Colony, 29 Block Urban Area Sargodha, 40100  |  Phone: (048) 3716807', 48, 86);
       }
 
-      // Right-aligned Invoice Title & Order ID (bounded within x: 360, width: 185 -> right edge: 545, leaving 14px right margin)
-      doc.font('Helvetica-Bold').fontSize(18).fillColor('#FFFFFF').text('INVOICE', 360, 46, { align: 'right', width: 185 });
-      doc.font('Helvetica').fontSize(9).fillColor('#CBD5E1').text(`#${order.id.slice(0, 8).toUpperCase()}`, 360, 70, { align: 'right', width: 185 });
+      // Right-aligned Invoice Title & Order ID
+      doc.font('Helvetica-Bold').fontSize(20).fillColor('#FFFFFF').text('INVOICE', 360, 52, { align: 'right', width: 185 });
+      doc.font('Helvetica').fontSize(9).fillColor('#CBD5E1').text(`#${order.id.slice(0, 8).toUpperCase()}`, 360, 78, { align: 'right', width: 185 });
 
       // 2. Customer & Invoice Info Meta Block
-      let y = 135;
+      let y = 172;
       doc.rect(36, y, 523, 58).fillAndStroke(bgSubtle, lineGray);
 
       const createdDate = new Date(order.createdAt).toLocaleDateString('en-US', {
@@ -95,7 +95,7 @@ export async function generateInvoicePdfBuffer(order: InvoiceOrderData): Promise
       doc.font('Helvetica').fontSize(10).fillColor('#334155').text(createdDate, 360, y + 24, { align: 'right', width: 185 });
 
       // 3. Line Items Table Header
-      y = 205;
+      y = 242;
       doc.rect(36, y, 523, 24).fill(navy);
 
       doc.font('Helvetica-Bold').fontSize(9).fillColor('#FFFFFF');
