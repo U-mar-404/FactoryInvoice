@@ -479,74 +479,150 @@ export const Customers: React.FC = () => {
             {hasActiveFilters ? 'Try adjusting your search or city/area filters.' : 'No customer accounts created yet.'}
           </div>
         ) : (
-          <div className="tableResponsive">
-            <table className="tbl">
-              <thead>
-              <tr>
-                <th>Customer Name</th>
-                <th>Phone Number</th>
-                <th>City</th>
-                <th>Area / Address</th>
-                <th>Assigned Agent</th>
-                <th style={{ textAlign: 'right' }}>Balance Owed</th>
-                <th style={{ width: '120px', textAlign: 'right' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customers.map((c) => (
-                <tr key={c.id}>
-                  <td>
-                    <div
-                      style={{ fontWeight: 700, color: 'var(--blue)', cursor: 'pointer' }}
-                      onClick={() => loadCustomerDetail(c.id)}
-                    >
-                      {c.name}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--ink-dim)' }}>@{c.username}</div>
-                  </td>
-                  <td>
-                    <span style={{ fontWeight: 600, color: 'var(--navy)', fontSize: '13px' }}>{c.phone || '—'}</span>
-                  </td>
-                  <td>
-                    <span style={{ fontWeight: 600, color: 'var(--navy)', fontSize: '13px' }}>{c.city || '—'}</span>
-                  </td>
-                  <td>
-                    <span className="badge b-gray">{c.area || '—'}</span>
-                    {c.address && (
-                      <div style={{ fontSize: '11px', color: 'var(--ink-dim)', marginTop: '2px', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {c.address}
+          <>
+            {/* Desktop Table View */}
+            <div className="desktopTable tableResponsive">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>Customer Name</th>
+                    <th>Phone Number</th>
+                    <th>City</th>
+                    <th>Area / Address</th>
+                    <th>Assigned Agent</th>
+                    <th style={{ textAlign: 'right' }}>Balance Owed</th>
+                    <th style={{ width: '120px', textAlign: 'right' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customers.map((c) => (
+                    <tr key={c.id}>
+                      <td>
+                        <div
+                          style={{ fontWeight: 700, color: 'var(--blue)', cursor: 'pointer' }}
+                          onClick={() => loadCustomerDetail(c.id)}
+                        >
+                          {c.name}
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--ink-dim)' }}>@{c.username}</div>
+                      </td>
+                      <td>
+                        <span style={{ fontWeight: 600, color: 'var(--navy)', fontSize: '13px' }}>{c.phone || '—'}</span>
+                      </td>
+                      <td>
+                        <span style={{ fontWeight: 600, color: 'var(--navy)', fontSize: '13px' }}>{c.city || '—'}</span>
+                      </td>
+                      <td>
+                        <span className="badge b-gray">{c.area || '—'}</span>
+                        {c.address && (
+                          <div style={{ fontSize: '11px', color: 'var(--ink-dim)', marginTop: '2px', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {c.address}
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <select
+                          className="cardFilterSelect"
+                          style={{ padding: '4px 8px', fontSize: '12px' }}
+                          value={c.agentId || ''}
+                          onChange={(e) => handleAgentChange(c.id, e.target.value)}
+                        >
+                          <option value="">No Agent</option>
+                          {agents.map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {a.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: 700, color: c.balance > 0 ? 'var(--bad)' : 'var(--good)' }}>
+                        {fmt(c.balance)}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button className="btn b-ghost small" onClick={() => loadCustomerDetail(c.id)}>
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Customers Card List */}
+            <div className="mCardList">
+              {customers.map((c) => {
+                const assignedAgent = agents.find((a) => a.id === c.agentId);
+                const isOverdue = c.balance > 0;
+                return (
+                  <div
+                    key={c.id}
+                    className="mCard tappable"
+                    onClick={() => loadCustomerDetail(c.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {/* Top Row: Customer Name & Balance Badge */}
+                    <div className="mCardHeader">
+                      <div>
+                        <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--navy)' }}>
+                          {c.name}
+                        </div>
+                        <div style={{ fontSize: '11.5px', color: 'var(--ink-dim)' }}>@{c.username}</div>
                       </div>
-                    )}
-                  </td>
-                  <td>
-                    <select
-                      className="cardFilterSelect"
-                      style={{ padding: '4px 8px', fontSize: '12px' }}
-                      value={c.agentId || ''}
-                      onChange={(e) => handleAgentChange(c.id, e.target.value)}
-                    >
-                      <option value="">No Agent</option>
-                      {agents.map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {a.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td style={{ textAlign: 'right', fontWeight: 700, color: c.balance > 0 ? 'var(--bad)' : 'var(--good)' }}>
-                    {fmt(c.balance)}
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <button className="btn b-ghost small" onClick={() => loadCustomerDetail(c.id)}>
-                      View Details
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                      <span
+                        className={`badge ${isOverdue ? 'b-bad' : 'b-good'}`}
+                        style={{ fontSize: '13px', fontWeight: 800, padding: '4px 10px' }}
+                      >
+                        {fmt(c.balance)}
+                      </span>
+                    </div>
+
+                    {/* Phone & Location Line */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px' }}>
+                      {c.phone ? (
+                        <a
+                          href={`tel:${c.phone}`}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ color: 'var(--blue)', fontWeight: 600, textDecoration: 'none' }}
+                        >
+                          📞 {c.phone}
+                        </a>
+                      ) : (
+                        <span style={{ color: 'var(--ink-dim)' }}>No phone</span>
+                      )}
+
+                      <span style={{ color: 'var(--ink-dim)', fontWeight: 500 }}>
+                        {c.city || c.area ? `${c.city || ''}${c.city && c.area ? ' · ' : ''}${c.area || ''}` : 'Location —'}
+                      </span>
+                    </div>
+
+                    {/* Agent & Address */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                      <span className="badge b-blue" style={{ fontSize: '11px' }}>
+                        👔 {assignedAgent ? assignedAgent.name : 'Unassigned'}
+                      </span>
+                      {c.address && (
+                        <span style={{ fontSize: '11.5px', color: 'var(--ink-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>
+                          📍 {c.address}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mCardDivider"></div>
+
+                    {/* Bottom Action Footer */}
+                    <div className="mCardFooter">
+                      <span style={{ fontSize: '12px', color: 'var(--ink-dim)' }}>Tap card to open full account profile</span>
+                      <button type="button" className="btn b-ghost small">
+                        View Details →
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

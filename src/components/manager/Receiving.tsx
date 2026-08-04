@@ -185,34 +185,73 @@ export const Receiving: React.FC = () => {
             {hasActiveFilters ? 'Try adjusting your search or filters.' : 'No payments logged yet.'}
           </div>
         ) : (
-          <div className="tableResponsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Customer</th>
-                  <th>Amount</th>
-                  <th>Note</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPayments.map((p) => (
-                  <tr key={p.id} className="rowIn">
-                    <td>{new Date(p.date).toLocaleDateString()}</td>
-                    <td style={{ fontWeight: 600 }}>{custById(p.customerId)?.name || '—'}</td>
-                    <td style={{ fontWeight: 700, color: 'var(--navy)' }}>{fmt(p.amount)}</td>
-                    <td>{p.note || '—'}</td>
-                    <td style={{ textAlign: 'right' }}>
-                      <button className="btn b-ghost small" onClick={() => handleOpenEditModal(p)}>
-                        Edit
-                      </button>
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="desktopTable tableResponsive">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Note</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredPayments.map((p) => (
+                    <tr key={p.id} className="rowIn">
+                      <td>{new Date(p.date).toLocaleDateString()}</td>
+                      <td style={{ fontWeight: 600 }}>{custById(p.customerId)?.name || '—'}</td>
+                      <td style={{ fontWeight: 700, color: 'var(--navy)' }}>{fmt(p.amount)}</td>
+                      <td>{p.note || '—'}</td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button className="btn b-ghost small" onClick={() => handleOpenEditModal(p)}>
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Receiving Payments Cards */}
+            <div className="mCardList">
+              {filteredPayments.map((p) => (
+                <div key={p.id} className="mCard">
+                  <div className="mCardHeader">
+                    <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--navy)' }}>
+                      {custById(p.customerId)?.name || 'Unknown Customer'}
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--ink-dim)' }}>
+                      {new Date(p.date).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <div style={{ fontSize: '16.5px', fontWeight: 800, color: 'var(--navy)' }}>
+                      {fmt(p.amount)}
+                    </div>
+                    {p.note && (
+                      <div style={{ fontSize: '12px', color: 'var(--ink-dim)', fontStyle: 'italic' }}>
+                        "{p.note}"
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mCardDivider"></div>
+
+                  <div className="mCardFooter">
+                    <span style={{ fontSize: '12px', color: 'var(--ink-dim)' }}>Logged Payment</span>
+                    <button className="btn b-ghost small" onClick={() => handleOpenEditModal(p)}>
+                      Edit Payment
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

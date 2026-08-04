@@ -179,31 +179,225 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ orders, viewer, onModi
           {hasActiveFilters ? 'Try adjusting your search or filters.' : 'Nothing to show yet.'}
         </div>
       ) : (
-        <div className="tableResponsive">
-          <table className="tbl">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Items</th>
-              {viewer !== 'store' && <th>Total Amount</th>}
-              <th>Status</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          {/* Desktop Table View */}
+          <div className="desktopTable tableResponsive">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  {viewer !== 'store' && <th>Total Amount</th>}
+                  <th>Status</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOrders.map((o) => {
+                  const t = orderTotal(o, custById);
+                  const totalBoxes = o.items.reduce((s, i) => s + i.qty, 0);
+                  const isExpanded = expandedOrderId === o.id;
+
+                  let hasShortage = false;
+                  if (viewer === 'manager' && o.status === 'pending') {
+                    hasShortage = o.items.some((i) => {
+                      const sku = getSkuStock(i.code, i.series, i.color);
+                      return sku ? i.qty > sku.stockQty : false;
+                    });
+                  }
+
+                  const seriesGroups: Record<string, typeof o.items> = {};
+                  o.items.forEach((item) => {
+                    const sName = item.series || 'Standard';
+                    if (!seriesGroups[sName]) seriesGroups[sName] = [];
+                    seriesGroups[sName].push(item);
+                  });
+
+                  return (
+                    <React.Fragment key={o.id}>
+                      <tr className="rowIn" style={{ background: isExpanded ? 'var(--bg-subtle)' : 'transparent' }}>
+                        <td>
+                          <b style={{ color: 'var(--navy)', cursor: 'pointer' }} onClick={() => toggleExpand(o.id)}>
+                            {o.id.slice(-6).toUpperCase()}
+                          </b>
+                          <br />
+                          <span style={{ color: 'var(--ink-dim)', fontSize: '11.5px' }}>
+                            {new Date(o.createdAt).toLocaleDateString()}
+                          </span>
+                        </td>
+                        <td>{o.customerName}</td>
+                        <td>
+                          <span
+                            style={{ cursor: 'pointer', color: 'var(--blue)', fontWeight: 600 }}
+                            onClick={() => toggleExpand(o.id)}
+                          >
+                            {o.items.length} item{o.items.length > 1 ? 's' : ''} · {totalBoxes} box {isExpanded ? '▲' : '▼'}
+                          </span>
+                        </td>
+                        {viewer !== 'store' && <td style={{ fontWeight: 700 }}>{fmt(t.total)}</td>}
+                        <td>{renderStatusBadge(o.status)}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="btnRow" style={{ justifyContent: 'flex-end' }}>
+                            <button className="btn b-ghost small" onClick={() => toggleExpand(o.id)}>
+                              {isExpanded ? 'Hide Details' : 'View Breakdown'}
+                            </button>
+                            {viewer === 'manager' && (
+                              <>
+                                {o.status === 'pending' && (
+                                  <button
+                                    className="btn b-primary small"
+                                    onClick={() => (onRowClick ? onRowClick(o) : onModify && onModify(o.id))}
+                                  >
+                                    Review Order
+                                  </button>
+                                )}
+                                {o.status === 'approved' && (
+                                  <button
+                                    className="btn b-ghost small"
+                                    onClick={() => onModify && onModify(o.id)}
+                                  >
+                                    Modify
+                                  </button>
+                                )}
+                                {o.status === 'dispatched' && (
+                                  <button
+                                    className="btn b-ghost small"
+                                    onClick={() => printOrderInvoice(o)}
+                                  >
+                                    Print invoice
+                                  </button>
+                                )}
+                              </>
+                            )}
+                            {viewer === 'store' && (
+                              <>
+                                <button
+                                  className="btn b-ghost small"
+                                  onClick={() => printPackingSlip(o)}
+                                >
+                                  Print packing slip
+                                </button>
+                                {o.status === 'approved' && (
+                                  <button
+                                    className="btn b-good small"
+                                    onClick={() => dispatchOrder(o.id)}
+                                  >
+                                    Mark dispatched
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan={viewer === 'store' ? 5 : 6} style={{ padding: '0 0 16px 0', background: 'var(--bg-subtle)' }}>
+                            <div style={{ padding: '16px 20px', background: '#fff', margin: '0 12px 12px 12px', borderRadius: '8px', border: '1.5px solid var(--line)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--navy)' }}>
+                                  {viewer === 'store'
+                                    ? `Order Fulfillment & Packing Details (Order #${o.id.slice(-6).toUpperCase()})`
+                                    : `Series-Grouped Order Review (Order #${o.id.slice(-6).toUpperCase()})`}
+                                </div>
+                                {viewer === 'manager' && hasShortage && (
+                                  <span className="badge b-bad" style={{ fontSize: '12px' }}>
+                                    ⚠️ Insufficient Stock Alert
+                                  </span>
+                                )}
+                              </div>
+
+                              <div style={{ fontSize: '12px', color: 'var(--ink-dim)', marginBottom: '12px', padding: '6px 10px', background: '#F8FAFC', borderRadius: '6px', border: '1px solid var(--line)' }}>
+                                Customer: <b style={{ color: 'var(--navy)' }}>{o.customerName}</b>
+                                {o.customerPhone && <> · Phone: <b style={{ color: 'var(--navy)' }}>{o.customerPhone}</b></>}
+                                {o.customerCity && <> · City: <b style={{ color: 'var(--navy)' }}>{o.customerCity}</b></>}
+                                {o.customerArea && <> · Area: <b style={{ color: 'var(--navy)' }}>{o.customerArea}</b></>}
+                                {o.customerAddress && <> · Address: <b style={{ color: 'var(--navy)' }}>{o.customerAddress}</b></>}
+                              </div>
+
+                              {viewer === 'manager' && hasShortage && (
+                                <div style={{ background: '#FEE2E2', color: '#991B1B', padding: '10px 14px', borderRadius: '6px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>
+                                  ⚠️ <b>Approval Blocked:</b> One or more requested item quantities exceed current on-hand stock. Modify order quantities down to available stock or add stock before approving.
+                                </div>
+                              )}
+
+                              {Object.entries(seriesGroups).map(([sName, items]) => {
+                                const seriesDiscount = o.items.find((i) => (i.series || 'Standard') === sName)?.discountPercent || 0;
+                                return (
+                                  <div key={sName} style={{ marginBottom: '16px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-subtle)', padding: '6px 10px', borderRadius: '6px', marginBottom: '8px' }}>
+                                      <span style={{ fontWeight: 700, color: 'var(--blue)', fontSize: '13px', textTransform: 'uppercase' }}>
+                                        {sName} Series
+                                      </span>
+                                      {viewer !== 'store' && (
+                                        <span className="badge b-blue" style={{ fontSize: '11px' }}>
+                                          Series Discount: {seriesDiscount}%
+                                        </span>
+                                      )}
+                                    </div>
+                                    <table className="tbl" style={{ fontSize: '12.5px' }}>
+                                      <thead>
+                                        <tr>
+                                          <th>Code</th>
+                                          <th>Item Name</th>
+                                          <th>Color</th>
+                                          <th style={{ textAlign: 'right' }}>Qty (Boxes)</th>
+                                          {viewer !== 'store' && <th style={{ textAlign: 'right' }}>Base Rate</th>}
+                                          {viewer !== 'store' && <th style={{ textAlign: 'right' }}>Disc. Price</th>}
+                                          {viewer !== 'store' && <th style={{ textAlign: 'right' }}>Line Total</th>}
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {items.map((it) => {
+                                          const base = it.price;
+                                          const discPrice = Math.round(base * (1 - seriesDiscount / 100));
+                                          const lineTotal = discPrice * it.qty;
+                                          const sku = getSkuStock(it.code, it.series, it.color);
+                                          const isShort = viewer === 'manager' && o.status === 'pending' && sku && it.qty > sku.stockQty;
+
+                                          return (
+                                            <tr key={`${it.code}-${it.color}`} style={{ background: isShort ? '#FEF2F2' : 'transparent' }}>
+                                              <td><b>{it.code}</b></td>
+                                              <td>{it.name}</td>
+                                              <td><span className="badge b-blue">{it.color}</span></td>
+                                              <td style={{ textAlign: 'right', fontWeight: 700 }}>
+                                                {it.qty}
+                                                {isShort && (
+                                                  <div style={{ fontSize: '10.5px', color: 'var(--bad)', fontWeight: 700 }}>
+                                                    (Avail: {sku?.stockQty ?? 0})
+                                                  </div>
+                                                )}
+                                              </td>
+                                              {viewer !== 'store' && <td style={{ textAlign: 'right', color: 'var(--ink-dim)' }}>{fmt(base)}</td>}
+                                              {viewer !== 'store' && <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(discPrice)}</td>}
+                                              {viewer !== 'store' && <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--navy)' }}>{fmt(lineTotal)}</td>}
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Orders Card List View */}
+          <div className="mCardList">
             {filteredOrders.map((o) => {
               const t = orderTotal(o, custById);
               const totalBoxes = o.items.reduce((s, i) => s + i.qty, 0);
               const isExpanded = expandedOrderId === o.id;
-
-              let hasShortage = false;
-              if (viewer === 'manager' && o.status === 'pending') {
-                hasShortage = o.items.some((i) => {
-                  const sku = getSkuStock(i.code, i.series, i.color);
-                  return sku ? i.qty > sku.stockQty : false;
-                });
-              }
 
               const seriesGroups: Record<string, typeof o.items> = {};
               o.items.forEach((item) => {
@@ -213,215 +407,121 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ orders, viewer, onModi
               });
 
               return (
-                <React.Fragment key={o.id}>
-                  <tr className="rowIn" style={{ background: isExpanded ? 'var(--bg-subtle)' : 'transparent' }}>
-                    <td>
-                      <b style={{ color: 'var(--navy)', cursor: 'pointer' }} onClick={() => toggleExpand(o.id)}>
-                        {o.id.slice(-6).toUpperCase()}
-                      </b>
-                      <br />
-                      <span style={{ color: 'var(--ink-dim)', fontSize: '11.5px' }}>
-                        {new Date(o.createdAt).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td>{o.customerName}</td>
-                    <td>
-                      <span
-                        style={{ cursor: 'pointer', color: 'var(--blue)', fontWeight: 600 }}
-                        onClick={() => toggleExpand(o.id)}
-                      >
-                        {o.items.length} item{o.items.length > 1 ? 's' : ''} · {totalBoxes} box {isExpanded ? '▲' : '▼'}
-                      </span>
-                    </td>
-                    {viewer !== 'store' && <td style={{ fontWeight: 700 }}>{fmt(t.total)}</td>}
-                    <td>{renderStatusBadge(o.status)}</td>
-                    <td style={{ textAlign: 'right' }}>
-                      <div className="btnRow" style={{ justifyContent: 'flex-end' }}>
-                        <button className="btn b-ghost small" onClick={() => toggleExpand(o.id)}>
-                          {isExpanded ? 'Hide Details' : 'View Breakdown'}
-                        </button>
-                        {viewer === 'manager' && (
-                          <>
-                            {o.status === 'pending' && (
-                              <button
-                                className="btn b-primary small"
-                                onClick={() => (onRowClick ? onRowClick(o) : onModify && onModify(o.id))}
-                              >
-                                Review Order
-                              </button>
-                            )}
-                            {o.status === 'approved' && (
-                              <button
-                                className="btn b-ghost small"
-                                onClick={() => onModify && onModify(o.id)}
-                              >
-                                Modify
-                              </button>
-                            )}
-                            {o.status === 'dispatched' && (
-                              <button
-                                className="btn b-ghost small"
-                                onClick={() => printOrderInvoice(o)}
-                              >
-                                Print invoice
-                              </button>
-                            )}
-                          </>
-                        )}
-                        {viewer === 'store' && (
-                          <>
-                            <button
-                              className="btn b-ghost small"
-                              onClick={() => printPackingSlip(o)}
-                            >
-                              Print packing slip
-                            </button>
-                            {o.status === 'approved' && (
-                              <button
-                                className="btn b-good small"
-                                onClick={() => dispatchOrder(o.id)}
-                              >
-                                Mark dispatched
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                <div key={o.id} className="mCard">
+                  {/* Top Row: Order ID + Status Badge */}
+                  <div className="mCardHeader">
+                    <b style={{ color: 'var(--navy)', fontSize: '13.5px', letterSpacing: '0.3px' }}>
+                      #{o.id.slice(-6).toUpperCase()}
+                    </b>
+                    {renderStatusBadge(o.status)}
+                  </div>
 
+                  {/* Customer Name & Date */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--navy)' }}>
+                      {o.customerName}
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--ink-dim)' }}>
+                      {new Date(o.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  {/* Item Summary Tappable Pill */}
+                  <div>
+                    <button
+                      type="button"
+                      className="btn b-ghost small"
+                      style={{
+                        width: '100%',
+                        justifyContent: 'space-between',
+                        background: 'var(--bg-subtle)',
+                        border: '1px solid var(--line)',
+                        padding: '6px 12px',
+                        fontSize: '12.5px',
+                        fontWeight: 600,
+                        color: 'var(--blue)',
+                      }}
+                      onClick={() => toggleExpand(o.id)}
+                    >
+                      <span>📦 {o.items.length} item{o.items.length > 1 ? 's' : ''} · {totalBoxes} box</span>
+                      <span>{isExpanded ? '▲ Hide' : '▼ Breakdown'}</span>
+                    </button>
+                  </div>
+
+                  {/* Expanded Breakdown inside Mobile Card */}
                   {isExpanded && (
-                    <tr>
-                      <td colSpan={viewer === 'store' ? 5 : 6} style={{ padding: '0 0 16px 0', background: 'var(--bg-subtle)' }}>
-                        <div style={{ padding: '16px 20px', background: '#fff', margin: '0 12px 12px 12px', borderRadius: '8px', border: '1.5px solid var(--line)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--navy)' }}>
-                              {viewer === 'store'
-                                ? `Order Fulfillment & Packing Details (Order #${o.id.slice(-6).toUpperCase()})`
-                                : `Series-Grouped Order Review (Order #${o.id.slice(-6).toUpperCase()})`}
-                            </div>
-                            {viewer === 'manager' && hasShortage && (
-                              <span className="badge b-bad" style={{ fontSize: '12px' }}>
-                                ⚠️ Insufficient Stock Alert
-                              </span>
-                            )}
+                    <div style={{ padding: '12px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '12.5px' }}>
+                      <div style={{ fontWeight: 700, color: 'var(--navy)', marginBottom: '8px' }}>
+                        Order Details (#{o.id.slice(-6).toUpperCase()})
+                      </div>
+                      {Object.entries(seriesGroups).map(([sName, sItems]) => (
+                        <div key={sName} style={{ marginBottom: '10px' }}>
+                          <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--blue)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                            {sName} Series
                           </div>
-
-                          <div style={{ fontSize: '12px', color: 'var(--ink-dim)', marginBottom: '12px', padding: '6px 10px', background: '#F8FAFC', borderRadius: '6px', border: '1px solid var(--line)' }}>
-                            Customer: <b style={{ color: 'var(--navy)' }}>{o.customerName}</b>
-                            {o.customerPhone && <> · Phone: <b style={{ color: 'var(--navy)' }}>{o.customerPhone}</b></>}
-                            {o.customerCity && <> · City: <b style={{ color: 'var(--navy)' }}>{o.customerCity}</b></>}
-                            {o.customerArea && <> · Area: <b style={{ color: 'var(--navy)' }}>{o.customerArea}</b></>}
-                            {o.customerAddress && <> · Address: <b style={{ color: 'var(--navy)' }}>{o.customerAddress}</b></>}
-                          </div>
-
-                          {viewer === 'manager' && hasShortage && (
-                            <div style={{ background: '#FEE2E2', color: '#991B1B', padding: '10px 14px', borderRadius: '6px', fontSize: '12.5px', fontWeight: 600, marginBottom: '14px' }}>
-                              ⚠️ <b>Approval Blocked:</b> One or more requested item quantities exceed current on-hand stock. Modify order quantities down to available stock or add stock before approving.
-                            </div>
-                          )}
-
-                          {Object.entries(seriesGroups).map(([sName, itemsList]) => (
-                            <div key={sName} style={{ marginBottom: '16px' }}>
-                              <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--navy)', background: '#F8FAFC', padding: '6px 10px', borderRadius: '4px', marginBottom: '6px' }}>
-                                {sName} Series
-                              </div>
-
-                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
-                                <thead>
-                                  <tr style={{ background: '#FAFBFD', textAlign: 'left', borderBottom: '1px solid var(--line)' }}>
-                                    <th style={{ padding: '6px 8px' }}>#</th>
-                                    <th style={{ padding: '6px 8px' }}>Item Code &amp; Name</th>
-                                    <th style={{ padding: '6px 8px' }}>Color</th>
-                                    <th style={{ padding: '6px 8px', textAlign: 'center' }}>Requested Qty</th>
-                                    {viewer === 'manager' && <th style={{ padding: '6px 8px', textAlign: 'center' }}>Available Stock</th>}
-                                    {viewer !== 'store' && (
-                                      <>
-                                        <th style={{ padding: '6px 8px', textAlign: 'right' }}>Price</th>
-                                        <th style={{ padding: '6px 8px', textAlign: 'center' }}>Discount %</th>
-                                        <th style={{ padding: '6px 8px', textAlign: 'right' }}>Price After Discount</th>
-                                        <th style={{ padding: '6px 8px', textAlign: 'right' }}>Line Total</th>
-                                      </>
-                                    )}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {itemsList.map((item, idx) => {
-                                    let discPct = item.discountPercent;
-                                    if (discPct === undefined || discPct === null || discPct === 0) {
-                                      const cust = custById(o.customerId || o.customerName);
-                                      if (cust && cust.seriesDiscounts) {
-                                        const sd = cust.seriesDiscounts.find(
-                                          (d) => d.seriesName.toLowerCase() === (item.series || '').toLowerCase()
-                                        );
-                                        if (sd && sd.discountPercent > 0) {
-                                          discPct = sd.discountPercent;
-                                        }
-                                      }
-                                      if (!discPct) discPct = o.discount || 0;
-                                    }
-                                    const priceAfterDisc = Math.round(item.price * (1 - discPct / 100));
-                                    const lineTotal = priceAfterDisc * item.qty;
-
-                                    const skuStock = viewer === 'manager' ? getSkuStock(item.code, item.series, item.color) : undefined;
-                                    const available = skuStock ? skuStock.stockQty : 0;
-                                    const isShort = viewer === 'manager' && skuStock && item.qty > available;
-
-                                    return (
-                                      <tr key={idx} style={{ borderBottom: '1px solid var(--line)', background: isShort ? '#FEF2F2' : 'transparent' }}>
-                                        <td style={{ padding: '8px', color: 'var(--ink-dim)' }}>{idx + 1}</td>
-                                        <td style={{ padding: '8px', fontWeight: 600 }}>{item.name} (CODE {item.code})</td>
-                                        <td style={{ padding: '8px' }}>
-                                          <span className="badge b-blue">{item.color || 'Standard'}</span>
-                                        </td>
-                                        <td style={{ padding: '8px', textAlign: 'center', fontWeight: 700 }}>{item.qty} box(es)</td>
-                                        {viewer === 'manager' && (
-                                          <td style={{ padding: '8px', textAlign: 'center' }}>
-                                            {isShort ? (
-                                              <span className="badge b-bad" style={{ fontWeight: 800 }}>
-                                                {available} avail (Shortage!)
-                                              </span>
-                                            ) : (
-                                              <span className="badge b-good">
-                                                {available} avail
-                                              </span>
-                                            )}
-                                          </td>
-                                        )}
-                                        {viewer !== 'store' && (
-                                          <>
-                                            <td style={{ padding: '8px', textAlign: 'right' }}>{fmt(item.price)}</td>
-                                            <td style={{ padding: '8px', textAlign: 'center' }}>{discPct}%</td>
-                                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 600 }}>{fmt(priceAfterDisc)}</td>
-                                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: 'var(--navy)' }}>
-                                              {fmt(lineTotal)}
-                                            </td>
-                                          </>
-                                        )}
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
+                          {sItems.map((item, idx) => (
+                            <div key={item.code ? `${item.code}-${item.color}` : idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px dashed var(--line)' }}>
+                              <span>{item.name} ({item.color}) × {item.qty} box</span>
+                              {viewer !== 'store' && <b>{fmt(item.price * item.qty)}</b>}
                             </div>
                           ))}
-
-                          {viewer !== 'store' && (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC', padding: '12px 16px', borderRadius: '6px', marginTop: '12px' }}>
-                              <span style={{ fontWeight: 700, fontSize: '13px' }}>Calculated Order Total:</span>
-                              <span style={{ fontWeight: 800, fontSize: '16px', color: 'var(--navy)' }}>{fmt(t.total)}</span>
-                            </div>
-                          )}
                         </div>
-                      </td>
-                    </tr>
+                      ))}
+                    </div>
                   )}
-                </React.Fragment>
+
+                  <div className="mCardDivider"></div>
+
+                  {/* Bottom Row: Total Amount + Action Buttons */}
+                  <div className="mCardFooter">
+                    {viewer !== 'store' ? (
+                      <div className="mCardTotal">{fmt(t.total)}</div>
+                    ) : (
+                      <div style={{ fontSize: '12px', color: 'var(--ink-dim)', fontWeight: 600 }}>Packing Desk</div>
+                    )}
+
+                    <div className="btnRow" style={{ gap: '6px', width: 'auto' }}>
+                      {viewer === 'manager' && (
+                        <>
+                          {o.status === 'pending' && (
+                            <button
+                              className="btn b-primary small"
+                              onClick={() => (onRowClick ? onRowClick(o) : onModify && onModify(o.id))}
+                            >
+                              Review
+                            </button>
+                          )}
+                          {o.status === 'approved' && (
+                            <button className="btn b-ghost small" onClick={() => onModify && onModify(o.id)}>
+                              Modify
+                            </button>
+                          )}
+                          {o.status === 'dispatched' && (
+                            <button className="btn b-ghost small" onClick={() => printOrderInvoice(o)}>
+                              Invoice
+                            </button>
+                          )}
+                        </>
+                      )}
+                      {viewer === 'store' && (
+                        <>
+                          <button className="btn b-ghost small" onClick={() => printPackingSlip(o)}>
+                            Slip
+                          </button>
+                          {o.status === 'approved' && (
+                            <button className="btn b-good small" onClick={() => dispatchOrder(o.id)}>
+                              Dispatch
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
               );
             })}
-          </tbody>
-        </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

@@ -91,77 +91,132 @@ export const RateList: React.FC = () => {
             {hasActiveFilters ? 'Try adjusting your search or series filter.' : 'Nothing to show yet.'}
           </div>
         ) : (
-          <div className="tableResponsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Item</th>
-                  <th>Pcs/Box</th>
-                  <th>Vector</th>
-                  <th>Ambit</th>
-                  <th>Waves/Cubic</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCatalog.map((it, idx) => (
-                  <tr key={it.code || idx} className="rowIn">
-                    <td>{it.code}</td>
-                    <td>{it.name}</td>
-                    <td>{it.pcsBox}</td>
-                    <td>
-                      <input
-                        type="number"
-                        value={it.prices.Vector ?? ''}
-                        onChange={(e) => handlePriceChange(it.code, 'Vector', e.target.value)}
-                        style={{
-                          width: '80px',
-                          padding: '6px',
-                          border: '1.5px solid var(--line)',
-                          borderRadius: '6px',
-                        }}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        value={it.prices.Ambit ?? ''}
-                        onChange={(e) => handlePriceChange(it.code, 'Ambit', e.target.value)}
-                        style={{
-                          width: '80px',
-                          padding: '6px',
-                          border: '1.5px solid var(--line)',
-                          borderRadius: '6px',
-                        }}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        value={it.prices.WavesCubic ?? ''}
-                        onChange={(e) => handlePriceChange(it.code, 'WavesCubic', e.target.value)}
-                        style={{
-                          width: '80px',
-                          padding: '6px',
-                          border: '1.5px solid var(--line)',
-                          borderRadius: '6px',
-                        }}
-                      />
-                    </td>
-                    <td>
-                      <button
-                        className="btn b-bad small"
-                        onClick={() => removeCatalogItem(idx)}
-                      >
-                        Remove
-                      </button>
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="desktopTable tableResponsive">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Item</th>
+                    <th>Pcs/Box</th>
+                    <th>Vector</th>
+                    <th>Ambit</th>
+                    <th>Waves/Cubic</th>
+                    <th></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredCatalog.map((it, idx) => (
+                    <tr key={it.code || idx} className="rowIn">
+                      <td>{it.code}</td>
+                      <td>{it.name}</td>
+                      <td>{it.pcsBox}</td>
+                      <td>
+                        <input
+                          type="number"
+                          value={it.prices.Vector ?? ''}
+                          onChange={(e) => handlePriceChange(it.code, 'Vector', e.target.value)}
+                          style={{
+                            width: '80px',
+                            padding: '6px',
+                            border: '1.5px solid var(--line)',
+                            borderRadius: '6px',
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={it.prices.Ambit ?? ''}
+                          onChange={(e) => handlePriceChange(it.code, 'Ambit', e.target.value)}
+                          style={{
+                            width: '80px',
+                            padding: '6px',
+                            border: '1.5px solid var(--line)',
+                            borderRadius: '6px',
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={it.prices.WavesCubic ?? ''}
+                          onChange={(e) => handlePriceChange(it.code, 'WavesCubic', e.target.value)}
+                          style={{
+                            width: '80px',
+                            padding: '6px',
+                            border: '1.5px solid var(--line)',
+                            borderRadius: '6px',
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <button
+                          className="btn b-bad small"
+                          onClick={() => removeCatalogItem(idx)}
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Rate List Cards View */}
+            <div className="mCardList">
+              {filteredCatalog.map((it, idx) => (
+                <div key={it.code || idx} className="mCard">
+                  <div className="mCardHeader">
+                    <div>
+                      <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--navy)' }}>
+                        {it.name}
+                      </div>
+                      <div style={{ fontSize: '11.5px', color: 'var(--ink-dim)' }}>CODE {it.code}</div>
+                    </div>
+                    <span className="badge b-blue">{it.pcsBox} Pcs/Box</span>
+                  </div>
+
+                  {/* Series Prices Inputs Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', margin: '4px 0' }}>
+                    {['Vector', 'Ambit', 'WavesCubic'].map((seriesName) => (
+                      <div key={seriesName} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                        <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--ink-dim)', textTransform: 'uppercase' }}>
+                          {seriesName}
+                        </span>
+                        <input
+                          type="number"
+                          value={(it.prices as any)[seriesName] ?? ''}
+                          onChange={(e) => handlePriceChange(it.code, seriesName, e.target.value)}
+                          placeholder="Rate"
+                          style={{
+                            width: '100%',
+                            padding: '6px',
+                            border: '1.5px solid var(--line)',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            minHeight: '40px',
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mCardDivider"></div>
+
+                  <div className="mCardFooter">
+                    <span style={{ fontSize: '12px', color: 'var(--ink-dim)' }}>Rate Configuration</span>
+                    <button className="btn b-bad small" onClick={() => removeCatalogItem(idx)}>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

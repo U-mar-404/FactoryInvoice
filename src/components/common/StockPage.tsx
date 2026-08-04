@@ -272,7 +272,8 @@ export const StockPage: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="tableResponsive">
+              {/* Desktop Table View */}
+              <div className="desktopTable tableResponsive">
                 <table className="tbl">
                   <thead>
                     <tr>
@@ -319,6 +320,47 @@ export const StockPage: React.FC = () => {
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Store Stock List */}
+              <div className="mCardList">
+                {filteredStoreItems.map((item) => {
+                  const currentVal = storeQtyInputs[item.skuId] || '';
+                  return (
+                    <div key={item.skuId} className="mCard">
+                      <div className="mCardHeader">
+                        <div>
+                          <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--navy)' }}>
+                            {item.name}
+                          </div>
+                          <div style={{ fontSize: '11.5px', color: 'var(--ink-dim)' }}>CODE {item.code}</div>
+                        </div>
+                        <span className="badge b-blue">{item.colorName}</span>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12.5px', color: 'var(--ink-dim)' }}>Pcs/Box: <b>{item.pcsBox}</b></span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--navy)' }}>Add Boxes:</span>
+                          <input
+                            type="number"
+                            min="0"
+                            className="fInput"
+                            style={{ width: '100px', textAlign: 'right', fontWeight: 700, minHeight: '44px' }}
+                            placeholder="0"
+                            value={currentVal}
+                            onChange={(e) =>
+                              setStoreQtyInputs((prev) => ({
+                                ...prev,
+                                [item.skuId]: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="cardFoot" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px' }}>
@@ -678,72 +720,138 @@ export const StockPage: React.FC = () => {
             <b>No stock items match filters</b>
           </div>
         ) : (
-          <div className="tableResponsive">
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Item Code &amp; Name</th>
-                  <th>Color</th>
-                  <th>Pcs/Box</th>
-                  <th style={{ textAlign: 'right' }}>Current Stock (Boxes)</th>
-                  <th style={{ textAlign: 'right' }}>Min Stock Level</th>
-                  <th style={{ textAlign: 'center' }}>Status</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStock.map((s, idx) => (
-                  <tr key={s.id}>
-                    <td style={{ color: 'var(--ink-dim)' }}>{idx + 1}</td>
-                    <td>
-                      <b style={{ color: 'var(--navy)' }}>{s.name}</b>
-                      <br />
-                      <span style={{ fontSize: '11.5px', color: 'var(--ink-dim)' }}>CODE {s.code}</span>
-                    </td>
-                    <td>
-                      <span className="badge b-blue">{s.colorName}</span>
-                    </td>
-                    <td>{s.pcsBox}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '15px', color: s.isLowStock ? 'var(--bad)' : 'var(--navy)' }}>
-                      {s.stockQty}
-                    </td>
-                    <td style={{ textAlign: 'right', fontWeight: 600 }}>{s.minStockLevel}</td>
-                    <td style={{ textAlign: 'center' }}>
-                      {s.isLowStock ? (
-                        <span className="badge b-bad">Low Stock</span>
-                      ) : (
-                        <span className="badge b-good">Optimal</span>
-                      )}
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <div className="btnRow" style={{ justifyContent: 'flex-end' }}>
-                        <button
-                          className="btn b-good small"
-                          onClick={() => {
-                            setAddStockItem(s);
-                            setAddQty('');
-                            setAddNote('');
-                          }}
-                        >
-                          + Add Stock
-                        </button>
-                        <button
-                          className="btn b-ghost small"
-                          onClick={() => {
-                            setEditMinItem(s);
-                            setMinLevelInput(String(s.minStockLevel));
-                          }}
-                        >
-                          Min Level
-                        </button>
-                      </div>
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="desktopTable tableResponsive">
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Item Code &amp; Name</th>
+                    <th>Color</th>
+                    <th>Pcs/Box</th>
+                    <th style={{ textAlign: 'right' }}>Current Stock (Boxes)</th>
+                    <th style={{ textAlign: 'right' }}>Min Stock Level</th>
+                    <th style={{ textAlign: 'center' }}>Status</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredStock.map((s, idx) => (
+                    <tr key={s.id}>
+                      <td style={{ color: 'var(--ink-dim)' }}>{idx + 1}</td>
+                      <td>
+                        <b style={{ color: 'var(--navy)' }}>{s.name}</b>
+                        <br />
+                        <span style={{ fontSize: '11.5px', color: 'var(--ink-dim)' }}>CODE {s.code}</span>
+                      </td>
+                      <td>
+                        <span className="badge b-blue">{s.colorName}</span>
+                      </td>
+                      <td>{s.pcsBox}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '15px', color: s.isLowStock ? 'var(--bad)' : 'var(--navy)' }}>
+                        {s.stockQty}
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: 600 }}>{s.minStockLevel}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        {s.isLowStock ? (
+                          <span className="badge b-bad">Low Stock</span>
+                        ) : (
+                          <span className="badge b-good">Optimal</span>
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div className="btnRow" style={{ justifyContent: 'flex-end' }}>
+                          <button
+                            className="btn b-good small"
+                            onClick={() => {
+                              setAddStockItem(s);
+                              setAddQty('');
+                              setAddNote('');
+                            }}
+                          >
+                            + Add Stock
+                          </button>
+                          <button
+                            className="btn b-ghost small"
+                            onClick={() => {
+                              setEditMinItem(s);
+                              setMinLevelInput(String(s.minStockLevel));
+                            }}
+                          >
+                            Min Level
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Manager Stock Audit Cards */}
+            <div className="mCardList">
+              {filteredStock.map((s) => (
+                <div key={s.id} className="mCard">
+                  {/* Top Row: Item Code/Name & Low Stock Status */}
+                  <div className="mCardHeader">
+                    <div>
+                      <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--navy)' }}>
+                        {s.name}
+                      </div>
+                      <div style={{ fontSize: '11.5px', color: 'var(--ink-dim)' }}>CODE {s.code}</div>
+                    </div>
+                    {s.isLowStock ? (
+                      <span className="badge b-bad">Low Stock</span>
+                    ) : (
+                      <span className="badge b-good">Optimal</span>
+                    )}
+                  </div>
+
+                  {/* Stock Qty & Color Pill */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span className="badge b-blue">{s.colorName}</span>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '16.5px', fontWeight: 800, color: s.isLowStock ? 'var(--bad)' : 'var(--navy)' }}>
+                        {s.stockQty} box(es)
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--ink-dim)' }}>
+                        Min Threshold: {s.minStockLevel} box(es)
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mCardDivider"></div>
+
+                  {/* Actions Row */}
+                  <div className="mCardFooter">
+                    <span style={{ fontSize: '12px', color: 'var(--ink-dim)' }}>Pcs/Box: <b>{s.pcsBox}</b></span>
+                    <div className="btnRow" style={{ gap: '6px', width: 'auto' }}>
+                      <button
+                        className="btn b-good small"
+                        onClick={() => {
+                          setAddStockItem(s);
+                          setAddQty('');
+                          setAddNote('');
+                        }}
+                      >
+                        + Add Stock
+                      </button>
+                      <button
+                        className="btn b-ghost small"
+                        onClick={() => {
+                          setEditMinItem(s);
+                          setMinLevelInput(String(s.minStockLevel));
+                        }}
+                      >
+                        Min Level
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

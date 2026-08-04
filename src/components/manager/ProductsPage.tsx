@@ -451,73 +451,148 @@ export const ProductsPage: React.FC = () => {
                   : 'Click "+ Add Product" to configure products for this series.'}
               </div>
             ) : (
-              <div className="tableResponsive">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Code</th>
-                      <th>Product Name</th>
-                      <th>Pcs/Box</th>
-                      {selectedSeries.colors.map((c) => (
-                        <th key={c.id}>{c.name} Rate</th>
-                      ))}
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredProducts.map((p) => {
-                      const skusInSeries = p.skus.filter((s) => s.seriesId === selectedSeries.id);
+              <>
+                {/* Desktop Table View */}
+                <div className="desktopTable tableResponsive">
+                  <table className="tbl">
+                    <thead>
+                      <tr>
+                        <th>Code</th>
+                        <th>Product Name</th>
+                        <th>Pcs/Box</th>
+                        {selectedSeries.colors.map((c) => (
+                          <th key={c.id}>{c.name} Rate</th>
+                        ))}
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredProducts.map((p) => {
+                        const skusInSeries = p.skus.filter((s) => s.seriesId === selectedSeries.id);
 
-                      return (
-                        <tr key={p.id} className="rowIn">
-                          <td>
-                            <b>{p.code}</b>
-                          </td>
-                          <td>{p.name}</td>
-                          <td>{p.pcsBox}</td>
+                        return (
+                          <tr key={p.id} className="rowIn">
+                            <td>
+                              <b>{p.code}</b>
+                            </td>
+                            <td>{p.name}</td>
+                            <td>{p.pcsBox}</td>
+                            {selectedSeries.colors.map((c) => {
+                              const sku = skusInSeries.find((s) => s.colorId === c.id);
+                              const price = sku ? sku.currentPrice : null;
+
+                              return (
+                                <td key={c.id}>
+                                  {price !== null ? fmt(price) : <span style={{ color: 'var(--ink-dim)' }}>—</span>}
+                                </td>
+                              );
+                            })}
+                            <td>
+                              {p.isActive ? (
+                                <span className="badge dispatched">Active</span>
+                              ) : (
+                                <span className="badge denied">Deactivated</span>
+                              )}
+                            </td>
+                            <td>
+                              <div className="btnRow">
+                                <button
+                                  className="btn b-ghost small"
+                                  onClick={() => {
+                                    setSelectedProduct(p);
+                                    setIsProductModalOpen(true);
+                                  }}
+                                >
+                                  Edit Rates
+                                </button>
+                                <button
+                                  className="btn b-bad small"
+                                  onClick={() => handleDeleteProduct(p)}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Products Card List View */}
+                <div className="mCardList">
+                  {filteredProducts.map((p) => {
+                    const skusInSeries = p.skus.filter((s) => s.seriesId === selectedSeries.id);
+                    return (
+                      <div key={p.id} className="mCard">
+                        {/* Top Row: Name, Code & Status */}
+                        <div className="mCardHeader">
+                          <div>
+                            <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--navy)' }}>
+                              {p.name}
+                            </div>
+                            <div style={{ fontSize: '11.5px', color: 'var(--ink-dim)' }}>CODE {p.code}</div>
+                          </div>
+                          {p.isActive ? (
+                            <span className="badge dispatched">Active</span>
+                          ) : (
+                            <span className="badge denied">Deactivated</span>
+                          )}
+                        </div>
+
+                        {/* Color Rates Grid */}
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '4px 0' }}>
                           {selectedSeries.colors.map((c) => {
                             const sku = skusInSeries.find((s) => s.colorId === c.id);
                             const price = sku ? sku.currentPrice : null;
-
                             return (
-                              <td key={c.id}>
-                                {price !== null ? fmt(price) : <span style={{ color: 'var(--ink-dim)' }}>—</span>}
-                              </td>
-                            );
-                          })}
-                          <td>
-                            {p.isActive ? (
-                              <span className="badge dispatched">Active</span>
-                            ) : (
-                              <span className="badge denied">Deactivated</span>
-                            )}
-                          </td>
-                          <td>
-                            <div className="btnRow">
-                              <button
-                                className="btn b-ghost small"
-                                onClick={() => {
-                                  setSelectedProduct(p);
-                                  setIsProductModalOpen(true);
+                              <div
+                                key={c.id}
+                                style={{
+                                  background: 'var(--bg-subtle)',
+                                  padding: '4px 8px',
+                                  borderRadius: '6px',
+                                  fontSize: '12px',
+                                  border: '1px solid var(--line)',
                                 }}
                               >
-                                Edit Rates
-                              </button>
-                              <button
-                                className="btn b-bad small"
-                                onClick={() => handleDeleteProduct(p)}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                                <span style={{ color: 'var(--ink-dim)' }}>{c.name}: </span>
+                                <b style={{ color: 'var(--navy)' }}>{price !== null ? fmt(price) : '—'}</b>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="mCardDivider"></div>
+
+                        {/* Bottom Actions Footer */}
+                        <div className="mCardFooter">
+                          <span style={{ fontSize: '12px', color: 'var(--ink-dim)' }}>Pcs/Box: <b>{p.pcsBox}</b></span>
+                          <div className="btnRow" style={{ gap: '6px', width: 'auto' }}>
+                            <button
+                              className="btn b-ghost small"
+                              onClick={() => {
+                                setSelectedProduct(p);
+                                setIsProductModalOpen(true);
+                              }}
+                            >
+                              Edit Rates
+                            </button>
+                            <button
+                              className="btn b-bad small"
+                              onClick={() => handleDeleteProduct(p)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
         </>
