@@ -1621,3 +1621,89 @@ html, body {
     background: #fff;
   }
 }
+
+/* ==========================================
+   MOBILE DATA CARDS vs DESKTOP TABLE SWITCH
+   Hard Breakpoint: 768px
+   ========================================== */
+
+/* Desktop view (> 768px): Show table, hide mobile cards */
+.desktopTable {
+  display: block !important;
+}
+
+.mCardList {
+  display: none !important;
+}
+
+/* Mobile view (<= 768px): Hide table, show mobile cards */
+@media (max-width: 768px) {
+  .desktopTable {
+    display: none !important;
+  }
+
+  .mCardList {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mCard {
+    background: #ffffff;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 2px 8px rgba(11, 27, 66, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .mCard.tappable:active {
+    background: #f8fafc;
+    border-color: var(--blue);
+    transform: scale(0.99);
+  }
+
+  .mCardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mCardDivider {
+    height: 1px;
+    background: var(--line);
+    margin: 2px 0;
+  }
+
+  .mCardFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mCardTotal {
+    font-size: 16.5px;
+    font-weight: 800;
+    color: var(--navy);
+  }
+
+  /* Scoped action buttons inside mobile cards stay horizontal and compact */
+  .mCard .btnRow {
+    width: auto !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .mCard .btnRow .btn {
+    width: auto !important;
+    min-height: 32px !important;
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+  }
+}

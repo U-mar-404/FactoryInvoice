@@ -227,7 +227,14 @@ Next: Final system verification and deployment readiness.
 - Redesigned mobile cards for `OrdersTable.tsx` (ID + Status top row, prominent Customer & Date, tappable breakdown pill, bold total amount & horizontal action buttons), `Customers.tsx` (prominent Name & overdue/paid balance pill, tap-to-call phone link, single-line location, agent tag chip, full-card tap handler), `StockPage.tsx`, `Receiving.tsx`, `ProductsPage.tsx`, and `RateList.tsx`.
 - Verified zero TypeScript compilation errors (`tsc --noEmit`) and clean Vite production build (`vite build`).
 
+
+## 2026-08-04 (Clean 768px Desktop Table vs Mobile Cards Switch Fix)
+- Added explicit `.desktopTable { display: block !important; }` and `.mCardList { display: none !important; }` CSS breakpoint rules (`@media (max-width: 768px)`) to [index.css](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/index.css).
+- Fixed simultaneous rendering bug so viewports `> 768px` render strictly desktop tables, and viewports `<= 768px` render strictly mobile data cards with zero overlap.
+- Verified clean build (`tsc --noEmit` and `vite build`).
+
 Next: Await further feature directives or user feedback.
+
 
 
 
