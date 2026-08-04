@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ProductItem, SeriesItem } from '../../types';
-import { apiClient, getApiBaseUrl } from '../../api/client';
+import { apiClient, getProductImageUrl } from '../../api/client';
 
 interface ProductModalProps {
   product: ProductItem | null;
@@ -192,7 +192,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 >
                   {imageUrl ? (
                     <img
-                      src={imageUrl.startsWith('http') ? imageUrl : `${getApiBaseUrl()}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`}
+                      src={getProductImageUrl(imageUrl)}
                       alt="Product Thumbnail"
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                     />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SeriesItem } from '../../types';
-import { apiClient, getApiBaseUrl } from '../../api/client';
+import { apiClient, getProductImageUrl } from '../../api/client';
 import { fmt } from '../../utils/formatters';
 
 export const Catalog: React.FC = () => {
@@ -185,7 +185,7 @@ export const Catalog: React.FC = () => {
                     >
                       {item.imageUrl ? (
                         <img
-                          src={item.imageUrl.startsWith('http') ? item.imageUrl : `${getApiBaseUrl()}${item.imageUrl.startsWith('/') ? '' : '/'}${item.imageUrl}`}
+                          src={getProductImageUrl(item.imageUrl)}
                           alt={item.name}
                           style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }}
                         />

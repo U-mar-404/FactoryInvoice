@@ -24,6 +24,16 @@ export function getApiBaseUrl(): string {
   return targetUrl.endsWith('/api') ? targetUrl : `${targetUrl.replace(/\/$/, '')}/api`;
 }
 
+export function getProductImageUrl(url: string | null | undefined): string {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+
+  // Get API base URL and strip trailing /api or trailing slashes
+  const apiBase = getApiBaseUrl().replace(/\/api\/?$/, '').replace(/\/$/, '');
+  const cleanPath = url.startsWith('/') ? url : `/${url}`;
+  return `${apiBase}${cleanPath}`;
+}
+
 function getAuthToken(): string | null {
   return localStorage.getItem('token');
 }

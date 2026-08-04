@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ColorItem, ProductItem, SeriesItem } from '../../types';
-import { apiClient, getApiBaseUrl } from '../../api/client';
+import { apiClient, getProductImageUrl } from '../../api/client';
 import { useApp } from '../../context/AppContext';
 import { fmt } from '../../utils/formatters';
 import { ProductModal } from './ProductModal';
 
 export const ProductsPage: React.FC = () => {
-  const { addToast } = useApp();
+  const { addToast, refreshData } = useApp();
 
   const [seriesList, setSeriesList] = useState<SeriesItem[]>([]);
   const [productsList, setProductsList] = useState<ProductItem[]>([]);
@@ -150,6 +150,7 @@ export const ProductsPage: React.FC = () => {
         addToast(`Product CODE ${data.code} created`, 'good');
       }
       await loadData();
+      await refreshData();
     } catch (err: any) {
       addToast(err.message || 'Failed to save product', 'bad');
     }
@@ -490,7 +491,7 @@ export const ProductsPage: React.FC = () => {
                               >
                                 {p.imageUrl ? (
                                   <img
-                                    src={p.imageUrl.startsWith('http') ? p.imageUrl : `${getApiBaseUrl()}${p.imageUrl.startsWith('/') ? '' : '/'}${p.imageUrl}`}
+                                    src={getProductImageUrl(p.imageUrl)}
                                     alt={p.name}
                                     style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                                   />
@@ -572,7 +573,7 @@ export const ProductsPage: React.FC = () => {
                             >
                               {p.imageUrl ? (
                                 <img
-                                  src={p.imageUrl.startsWith('http') ? p.imageUrl : `${getApiBaseUrl()}${p.imageUrl.startsWith('/') ? '' : '/'}${p.imageUrl}`}
+                                  src={getProductImageUrl(p.imageUrl)}
                                   alt={p.name}
                                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                                 />
