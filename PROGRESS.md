@@ -239,7 +239,14 @@ Next: Final system verification and deployment readiness.
 - Built Multer image upload endpoint `POST /api/products/upload`, file picker + preview thumbnail controls in [ProductModal.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/manager/ProductModal.tsx), and thumbnail image columns on Manager [ProductsPage.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/manager/ProductsPage.tsx).
 - Displayed consistent 140px product thumbnail image containers with clean fallback placeholder graphics on Customer [Catalog.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/customer/Catalog.tsx). Updated [GEMINI.md](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/GEMINI.md) and [project-spec.md](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/project-spec.md).
 
+
+## 2026-08-04 (Image Upload Auth Token Key Fix)
+- Fixed `uploadImage` in [client.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/api/client.ts) to read authentication token using `getAuthToken()` (reading `localStorage.getItem('token')` instead of incorrect `mesco_auth_token` key).
+- Confirmed product image uploads resolve with valid Bearer token authorization and display on Products management page and Customer Catalog.
+- Verified clean build (`tsc --noEmit` and `vite build`).
+
 Next: Await further feature directives or user feedback.
+
 
 
 

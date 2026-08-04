@@ -225,7 +225,7 @@ export const apiClient = {
       const formData = new FormData();
       formData.append('file', file);
 
-      const token = localStorage.getItem('mesco_auth_token');
+      const token = getAuthToken();
       const headers: Record<string, string> = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
