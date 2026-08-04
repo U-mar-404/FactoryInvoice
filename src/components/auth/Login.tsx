@@ -5,7 +5,8 @@ import logoImg from '../../assets/logo.png';
 export const Login: React.FC = () => {
   const { login } = useApp();
   const [username, setUsername] = useState<string>('');
-  const [password, setPassword] = useState<string>('demo123');
+  const [password, setPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -16,6 +17,10 @@ export const Login: React.FC = () => {
     const uname = username.trim();
     if (!uname) {
       setError('Please enter your username.');
+      return;
+    }
+    if (!password) {
+      setError('Please enter your password.');
       return;
     }
 
@@ -52,7 +57,7 @@ export const Login: React.FC = () => {
               <label>Username</label>
               <input
                 type="text"
-                placeholder="e.g. admin, manager, store, ali traders"
+                placeholder="Enter your username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoFocus
@@ -61,31 +66,43 @@ export const Login: React.FC = () => {
 
             <div className="field">
               <label>Password</label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{ paddingRight: '42px', width: '100%' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    color: 'var(--ink-dim)',
+                    padding: '4px 6px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {showPassword ? '👁️' : '🙈'}
+                </button>
+              </div>
             </div>
 
-            <button type="submit" className="btnPrimary" disabled={loading}>
+            <button type="submit" className="btnPrimary" disabled={loading} style={{ marginTop: '8px' }}>
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
             <div className="loginErr">{error}</div>
           </form>
-
-          <div className="demoNote">
-            <b>Demo access accounts</b> (Password: <code>demo123</code>):
-            <br />
-            • <b>admin</b> — Admin Dashboard (Manage Users &amp; Roles)
-            <br />
-            • <b>manager</b> — Office Manager (Orders, Rates, Reports)
-            <br />
-            • <b>store</b> — Store Floor (Dispatch &amp; Printing)
-            <br />
-            • <b>ali traders</b> — Customer Ordering Account
-          </div>
         </div>
       </div>
     </div>

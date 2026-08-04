@@ -195,10 +195,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const login = async (username: string, password?: string): Promise<boolean> => {
     const uname = username.trim().toLowerCase();
+    const passStr = (password || '').trim();
+
+    if (!uname || !passStr) {
+      return false;
+    }
 
     try {
-      // 1. Try backend API auth
-      const authRes = await apiClient.auth.login(uname, password || 'demo123');
+      const authRes = await apiClient.auth.login(uname, passStr);
       setUser(authRes.user);
       setStored('user', authRes.user);
       setActivePage(getInitialPageForRole(authRes.user.role));
@@ -206,37 +210,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (authRes.user.role === 'admin') await fetchUsersList();
       return true;
     } catch (apiErr) {
-      console.warn('Backend API login failed, attempting local auth fallback:', apiErr);
-
-      // 2. Local fallback login
-      let matchedUser = usersList.find((u) => u.username.toLowerCase() === uname);
-      if (!matchedUser) {
-        const custMatch = customers.find((c) => c.username.toLowerCase() === uname || c.id === uname);
-        if (custMatch) {
-          matchedUser = {
-            id: custMatch.id,
-            username: custMatch.username,
-            name: custMatch.name,
-            role: 'customer',
-            customerId: custMatch.id,
-          };
-        }
-      }
-
-      if (!matchedUser) return false;
-
-      const userObj: User = {
-        id: matchedUser.id,
-        role: matchedUser.role,
-        name: matchedUser.name,
-        username: matchedUser.username,
-        customerId: matchedUser.customerId || (matchedUser.role === 'customer' ? matchedUser.id : undefined),
-      };
-
-      setUser(userObj);
-      setStored('user', userObj);
-      setActivePage(getInitialPageForRole(matchedUser.role));
-      return true;
+      console.error('[login] Authentication failed:', apiErr);
+      return false;
     }
   };
 

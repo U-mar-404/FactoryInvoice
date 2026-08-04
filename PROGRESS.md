@@ -299,7 +299,14 @@ Next: Final system verification and deployment readiness.
 - Enforced minimum 6-character length requirement and `bcrypt.hash(password, 10)` in [admin.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/src/routes/admin.ts) user endpoints and [seed.ts](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/backend/prisma/seed.ts).
 - Created ignored `CREDENTIALS.md` for local reference and updated [GEMINI.md](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/GEMINI.md) with bootstrapped admin account documentation.
 
+
+## 2026-08-04 (Frontend Auth Bypass Removal & Login Page UI Cleanup)
+- Removed prototype local auth fallback bypass from [AppContext.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/context/AppContext.tsx); login strictly validates credentials against the backend API and rejects blank or incorrect passwords for all usernames.
+- Cleaned up [Login.tsx](file:///Users/umar/Documents/Factory%20Invoice/Mesco%20Invoice/src/components/auth/Login.tsx): initialized password state to empty, removed pre-filled value and demo accounts list box, and added eye show/hide password toggle button.
+- Confirmed zero build errors and verified rejection of blank/wrong passwords across all roles via automated test suite.
+
 Next: Await further feature directives or user feedback.
+
 
 
 
